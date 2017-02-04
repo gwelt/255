@@ -5,13 +5,16 @@ const baudrate="9600";
 
 var WebSocket = require('ws');
 var ws = new WebSocket("ws://"+websocketserver);
-require('child_process').execSync('stty -F '+printer+' '+baudrate);
-
-var welcome="================================\\nInterface: "+interface+"\\nIP: "+require('os').networkInterfaces()[interface][0]['address']+"\\nPrinter: "+printer+" @"+baudrate+" baud\\nListening @"+websocketserver+"\\n================================";
-require('child_process').execSync('echo "'+welcome+'" > '+printer,'e');
-//console.log(welcome);
 
 Date.prototype.addHours= function(h){this.setHours(this.getHours()+h); return this;}
+
+ws.on('open', function() {
+  p=require('child_process');
+  p.execSync('stty -F '+printer+' '+baudrate);
+  var welcome="================================\\nInterface: "+interface+"\\nIP: "+require('os').networkInterfaces()[interface][0]['address']+"\\nPrinter: "+printer+" @"+baudrate+" baud\\nListening @"+websocketserver+"\\n================================";
+  p.execSync('echo "'+welcome+'" > '+printer,'e');
+  //console.log(welcome);
+});
 
 ws.on('message', function(message) {
   if (message.startsWith(':')) {
