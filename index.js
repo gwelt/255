@@ -17,7 +17,7 @@ const server = express()
   .listen(PORT, function() {process.stdout.write(`\x1b[44m SERVER LISTENING ON PORT ${ PORT } \x1b[0m `)});
 const wss = new SocketServer({ server });
 
-function safe_text(text) {return text.replace(/[^\w\ ]/g,'').slice(0,32)}
+function safe_text(text) {return text.replace(/[^\w\ !]/g,'').slice(0,32)}
 ///--- CONNECTION-HANDLER ---///
 function broadcast(text) {try{wss.clients.forEach((ws) => {ws.send(safe_text(text))})} catch(err){};}
 wss.on('connection', (ws) => {

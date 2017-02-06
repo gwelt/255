@@ -15,7 +15,7 @@ function ws_open(url) {
   ws=new WebSocket(url);
   ws.onmessage = function (message) {console.log(message);tweet(message.data)};
   ws.onerror = function(e) {console.log(e);tweet('CONNECTION ERROR ['+e.currentTarget.url+']')};
-  ws.onclose = function(e) {console.log(e);tweet('CONNECTION CLOSED ['+e.currentTarget.url+']')};
+  ws.onclose = function(user) {console.log(user);tweet('CONNECTION CLOSED ['+user.currentTarget.url+']')};
   return ws;
 }
 

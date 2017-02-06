@@ -1,4 +1,4 @@
-var websocketserver="localhost"; //localhost:3000
+var websocketserver="localhost:3000"; //localhost:3000
 if (process.argv[2]) {websocketserver=process.argv[2]};
 const interface="wlan0";
 const printer="/dev/ttyS0";
@@ -17,9 +17,11 @@ function get_time() {
   return hour+""+min;
 }
 function message(msg) {
-  lcd.send(msg);
-  msg=get_time()+" "+msg;
-  require('child_process').execSync('echo "'+msg+'" > /dev/ttyS0','e');
+  if (!msg.startsWith('[')) {
+    lcd.send(msg);
+    msg=get_time()+" "+msg;
+    require('child_process').execSync('echo "'+msg+'" > /dev/ttyS0','e');
+  }
 }
 
 ws.on('open', function() {
@@ -32,5 +34,5 @@ ws.on('open', function() {
 });
 
 ws.on('message', function(msg) {message(msg);});
-ws.on('close', function(e) {message('CONNECTION CLOSED '+e);process.exit();});
+ws.on('close', function(user) {message('CONNECTION CLOSED');process.exit();});
 ws.on('error', function(e) {console.log(e+'\nTry this: node this.js [websocket-server]:[port]');process.exit();});
