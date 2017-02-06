@@ -1,4 +1,4 @@
-var ws=ws_open(location.origin.replace(/^http/, 'ws')+'/socket');
+var ws=ws_open(location.origin.replace(/^http/, 'ws'));
 var tweets=[];
 
 function tweet(t) {
@@ -12,10 +12,10 @@ function tweet(t) {
 }
 
 function ws_open(url) {
-  try {ws=new WebSocket(url)} catch (err){alert(err);ws=false};
-  if (ws) {
-    ws.onmessage = function (message) {tweet(message.data.substr(0))}
-  }
+  ws=new WebSocket(url);
+  ws.onmessage = function (message) {console.log(message);tweet(message.data)};
+  ws.onerror = function(e) {console.log(e);tweet('CONNECTION ERROR ['+e.currentTarget.url+']')};
+  ws.onclose = function(e) {console.log(e);tweet('CONNECTION CLOSED ['+e.currentTarget.url+']')};
   return ws;
 }
 
