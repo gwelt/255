@@ -1,11 +1,9 @@
 'use strict';
 const express = require('express');
 const SocketServer = require('ws').Server;
-const path = require('path');
-const INDEX = path.join(__dirname, 'index.html');
 const server = express()
   .use((req, res) => {
-    if (req.url=="/") {res.sendFile(INDEX)}
+    if (req.url=="/") {res.sendFile(require('path').join(__dirname, 'index.html'))}
     else {broadcast(req.url);res.send()}
   })
   .listen(3000);
