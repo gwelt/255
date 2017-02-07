@@ -3,11 +3,9 @@ const express = require('express');
 const SocketServer = require('ws').Server;
 const path = require('path');
 const INDEX = path.join(__dirname, 'index.html');
-const CLIENTJS = path.join(__dirname, 'client.js');
 const server = express()
   .use((req, res) => {
     if (req.url=="/") {res.sendFile(INDEX)}
-    else if (req.url=="/client.js") {res.sendFile(CLIENTJS)}
     else {broadcast(req.url);res.send()}
   })
   .listen(3000);
