@@ -7,6 +7,7 @@ ws_255.on('message', function incoming(data, flags) {
   if (!data.startsWith(myname)) {
     if (data.includes('Hi')) {say('Hi there.')}
     if (data.includes('time')) {say('The time is '+get_time()+'.')}
+    if (data.includes('fortune')) {say(require('child_process').execSync('fortune'))}
   }
 });
 ws_255.on('error', function(e) {console.log(e+'\nTry this: node this.js [websocket-server]:[port]');process.exit();});
