@@ -3,7 +3,7 @@ const express = require('express');
 const SocketServer = require('ws').Server;
 const server = express()
   .use((req, res) => {
-    if (req.url=="/") {res.sendFile(require('path').join(__dirname, 'index.html'))}
+    if (req.url=="/") {res.sendFile(require('path').join(__dirname, '255_client_simple.html'))}
     else {broadcast(req.url);res.send()}
   })
   .listen(3000);
