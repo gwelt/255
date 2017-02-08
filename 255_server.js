@@ -8,6 +8,9 @@ const server = express()
   .get('/', function(req, res) {
     res.sendFile(require('path').join(__dirname, '255_client_simple.html'))
   })
+  .get('*', function(req, res) {
+    res.send('404');
+  })
   .listen(3000);
 const wss = new SocketServer({ server });
 wss.on('connection', (ws) => {
@@ -16,5 +19,5 @@ wss.on('connection', (ws) => {
   ws.on('message', (msg) => {if (msg) {broadcast(msg)}});
   ws.on('close', () => {broadcast('CLIENT DISCONNECTED')});
 });
-function safe_text(text) {return unescape(text).replace(/[^\w\s\.,!\@#$^&%*()+=-\[\]\/{}\|:\?]/g,'').slice(0,32)} //!@#$^&%*()+=-[]\/{}|:<>?,.
+function safe_text(text) {return unescape(text).replace(/[^\w\s\.,'!\@#$^&%*()+=-\[\]\/{}\|:\?]/g,'').slice(0,32)} //!@#$^&%*()+=-[]\/{}|:<>?,.
 function broadcast(text) {try{wss.clients.forEach((ws) => {ws.send(safe_text(text))})} catch(err){};}
