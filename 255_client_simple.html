@@ -9,7 +9,7 @@
 	<script>
 	var ws=ws_open(location.origin.replace(/^http/, 'ws'));
 	var tweets=[];
-	function send_message(m) {if (m) {if (ws) {ws.send(m)} else {var req = new XMLHttpRequest(); req.open('GET',window.location+m); req.send();}}}
+	function send_message(m) {if (m) {if (ws) {ws.send(m)} else {var req = new XMLHttpRequest(); req.open('GET',window.location+'m/'+m); req.send();}}}
 	function tweet(t) {
 	  if (t) {tweets.push(t)}
 	  while (tweets.length>8) {tweets.splice(0,1)}
