@@ -16,5 +16,5 @@ wss.on('connection', (ws) => {
   ws.on('message', (msg) => {if (msg) {broadcast(msg)}});
   ws.on('close', () => {broadcast('CLIENT DISCONNECTED')});
 });
-function safe_text(text) {return unescape(text).replace(/[^\w\s\.,!\@#$^&%*()+=-\[\]\/{}\|:\?]/g,'').slice(0,32)} //!@#$^&%*()+=-[]\/{}|:<>?,.
+function safe_text(text) {return unescape(text).replace(/[^\w\s\.,'!\@#$^&%*()+=-\[\]\/{}\|:\?]/g,'').slice(0,32)} //!@#$^&%*()+=-[]\/{}|:<>?,.
 function broadcast(text) {try{wss.clients.forEach((ws) => {ws.send(safe_text(text))})} catch(err){};}
