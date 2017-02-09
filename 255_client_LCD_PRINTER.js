@@ -18,6 +18,8 @@ function get_time() {
 }
 function message(msg) {
   if (!msg.startsWith('[')) {
+    var mapUmlaute = {ä:"ae",ü:"ue",ö:"oe",Ä:"Ae",Ü:"Ue",Ö:"Oe",ß:"ss"};
+    msg=msg.replace(/[äüöÄÜÖß]/g,function(m){return mapUmlaute[m]});
     lcd.send(msg);
     msg=get_time()+" "+msg;
     require('child_process').execSync('echo "'+msg+'" > /dev/ttyS0','e');
@@ -29,7 +31,7 @@ ws.on('open', function() {
   lcd=require('child_process').fork(path.join(__dirname, 'LCD.js'));
   p=require('child_process');
   p.execSync('stty -F '+printer+' '+baudrate);
-  var welcome="================================\\nInterface: "+interface+"\\nIP: "+require('os').networkInterfaces()[interface][0]['address']+"\\nPrinter: "+printer+" @"+baudrate+" baud\\nListening @"+websocketserver+"\\n================================";
+  var welcome="================================\\nIP: "+require('os').networkInterfaces()[interface][0]['address']+" ("+interface+")\\nPrinter: "+printer+" @"+baudrate+" baud\\nListening @"+websocketserver+"\\n================================";
   p.execSync('echo "'+welcome+'" > '+printer,'e');
 });
 
