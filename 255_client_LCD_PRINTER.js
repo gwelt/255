@@ -36,5 +36,5 @@ ws.on('open', function() {
 });
 
 ws.on('message', function(msg) {message(msg);});
-ws.on('close', function(user) {message('CONNECTION CLOSED');process.exit();});
+ws.on('close', function(user) {process.exit()});
 ws.on('error', function(e) {console.log(e+'\nTry this: node this.js [websocket-server]:[port]');process.exit();});
