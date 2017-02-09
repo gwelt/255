@@ -2,15 +2,9 @@
 const express = require('express');
 const SocketServer = require('ws').Server;
 const server = express()
-  .get('/m/:m', function(req, res) {
-    broadcast(req.params.m);res.send();
-  })
-  .get('/', function(req, res) {
-    res.sendFile(require('path').join(__dirname, '255_client_simple.html'))
-  })
-  .get('*', function(req, res) {
-    res.send('404');
-  })
+  .get('/m/:m', function(req, res) {broadcast(req.params.m);res.send()})
+  .get('/', function(req, res) {res.sendFile(require('path').join(__dirname, '255_client_simple.html'))})
+  .get('*', function(req, res) {res.send('404')})
   .listen(3000);
 const wss = new SocketServer({ server });
 wss.on('connection', (ws) => {
