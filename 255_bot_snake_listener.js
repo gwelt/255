@@ -2,6 +2,7 @@ const WebSocket=require('ws');
 var ws_255=new WebSocket("ws://"+process.argv[2]);
 
 var ws_255_connected=false;
+
 ws_255.on('open', function opened() {ws_255_connected=true});
 ws_255.on('error', function(e) {console.log(e+'\nTry this: node this.js [websocket-server]:[port]');process.exit()});
 ws_255.on('close', function(user) {process.exit()});
