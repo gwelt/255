@@ -1,13 +1,22 @@
-var websocketserver="localhost:3000"; //localhost:3000
-if (process.argv[2]) {websocketserver=process.argv[2]};
+const WebSocket=require('ws');
+var ws_255=new WebSocket("ws://"+process.argv[2]);
+
 const interface="wlan0";
 const printer="/dev/ttyS0";
 const baudrate="9600";
 const path = require('path');
 var lcd = "";
 
-var WebSocket = require('ws');
-var ws = new WebSocket("ws://"+websocketserver);
+ws_255.on('open', function() {
+  lcd=require('child_process').fork(path.join(__dirname, 'LCD.js'));
+  p=require('child_process');
+  p.execSync('stty -F '+printer+' '+baudrate);
+  var welcome="================================\\nIP: "+require('os').networkInterfaces()[interface][0]['address']+" ("+interface+")\\nPrinter: "+printer+" @"+baudrate+" baud\\nListening @"+process.argv[2]+"\\n================================";
+  p.execSync('echo "'+welcome+'" > '+printer,'e');
+});
+ws_255.on('error', function(e) {console.log(get_time()+' '+e+'\nTry this: node this.js [websocket-server]:[port]');process.exit();});
+ws_255.on('close', function(user) {console.log(get_time()+' CONNECTION CLOSED for whatever reason');process.exit()});
+ws_255.on('message', function(msg) {message(msg);});
 
 Date.prototype.addHours= function(h){this.setHours(this.getHours()+h); return this;}
 function get_time() {
@@ -25,16 +34,3 @@ function message(msg) {
     require('child_process').execSync('echo "'+msg+'" > /dev/ttyS0','e');
   }
 }
-
-ws.on('open', function() {
-  console.log('CONNECTED TO ws://'+websocketserver);
-  lcd=require('child_process').fork(path.join(__dirname, 'LCD.js'));
-  p=require('child_process');
-  p.execSync('stty -F '+printer+' '+baudrate);
-  var welcome="================================\\nIP: "+require('os').networkInterfaces()[interface][0]['address']+" ("+interface+")\\nPrinter: "+printer+" @"+baudrate+" baud\\nListening @"+websocketserver+"\\n================================";
-  p.execSync('echo "'+welcome+'" > '+printer,'e');
-});
-
-ws.on('message', function(msg) {message(msg);});
-ws.on('close', function(user) {process.exit()});
-ws.on('error', function(e) {console.log(e+'\nTry this: node this.js [websocket-server]:[port]');process.exit();});
