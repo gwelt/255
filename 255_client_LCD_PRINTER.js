@@ -13,10 +13,11 @@ ws_255.on('open', function() {
   p.execSync('stty -F '+printer+' '+baudrate);
   var welcome="================================\\nIP: "+require('os').networkInterfaces()[interface][0]['address']+" ("+interface+")\\nPrinter: "+printer+" @"+baudrate+" baud\\nListening @"+process.argv[2]+"\\n================================";
   p.execSync('echo "'+welcome+'" > '+printer,'e');
+  setInterval(function(){ws_255.send()},60000); // send empty message every minute to stay connected
 });
 ws_255.on('error', function(e) {console.log(get_time()+' '+e+'\nTry this: node this.js [websocket-server]:[port]');process.exit();});
 ws_255.on('close', function(user) {console.log(get_time()+' CONNECTION CLOSED for whatever reason');process.exit()});
-ws_255.on('message', function(msg) {message(msg);});
+ws_255.on('message', function(msg) {console.log('M:'+msg);message(msg);});
 
 Date.prototype.addHours= function(h){this.setHours(this.getHours()+h); return this;}
 function get_time() {

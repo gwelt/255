@@ -12,7 +12,7 @@ ws_255.on('message', function incoming(data, flags) {
     if (data.startsWith('Hi')) {say('Hi there.')}
     if (data.includes('time')) {say('The time is '+get_time()+'.')}
     if (data.includes('fortune')) {say(require('child_process').execSync('fortune',{stdio:'pipe'}).toString().replace(/[\r\n]/g,' '))}
-    if (data=='PING') {say('PONG');clearInterval(interval);interval=setInterval(function(){say("I'm alive! "+get_time())},10*60000)}
+    if (data=='PING') {say('PONG');clearInterval(interval);interval=setInterval(function(){say("I'm alive! "+get_time())},30*60000)}
     if (data=='PING OFF') {say('Interval cleared.');clearInterval(interval)}
   }
 });
