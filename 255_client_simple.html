@@ -1,33 +1,48 @@
 <!doctype html>
 <html>
-	<head>
-		<title>255</title>
-	</head>
-	<body>
-		<div id=text></div>
-		<script>
-		var ws=ws_open(location.origin.replace(/^http/, 'ws'));
-		var tweets=[];
-		function send_message(m) {if (m) {if (ws) {ws.send(m)} else {var req = new XMLHttpRequest(); req.open('GET',window.location+'m/'+m); req.send();}}}
-		function tweet(t) {
-			if (t) {tweets.push(t)}
-			while (tweets.length>8) {tweets.splice(0,1)}
-			var etweet=document.getElementById('text');
-			if (etweet) {
-				etweet.innerHTML="";
-				tweets.forEach(function(tt) {etweet.innerHTML+=tt+"<br>"});
-				var form="<form action=javascript:void(0); onsubmit=send_message(document.getElementById('message').value)><input id='message' type='text'><input type=submit value='&gt;'></form>";
-				etweet.innerHTML+=form;
-				document.getElementById('message').focus();
-			};
-		}
-		function ws_open(url) {
-			ws=new WebSocket(url);
-			ws.onmessage = function (message) {console.log(message);tweet(message.data)};
-			ws.onerror = function(e) {console.log(e);tweet('CONNECTION ERROR ['+e.currentTarget.url+']')};
-			ws.onclose = function(user) {console.log(user);tweet('CONNECTION CLOSED');ws=0;};
-			return ws;
-		}
-		</script>
-	</body>
+<head>
+  <meta name=viewport content="width=device-width, initial-scale=1">
+  <title>255</title>
+  <style>
+    * {font:18px Helvetica, Arial; margin:0;padding:0;box-sizing:border-box;}
+    body {}
+    form {padding:3px;position:fixed;bottom:0;width:100%;}
+    form input {border:0;padding:10px;width:100%;}
+    #tweet {list-style-type:none;margin:0;padding:0;}
+    #tweet li {padding:5px 10px;}
+    #tweet li:nth-child(odd) {background:#eee;}
+  </style>
+</head>
+<body>
+
+  <ul id=tweet></ul>
+  <form action=javascript:void(0); onsubmit=send_message(document.getElementById('message').value)><input id='message' type='text'></form>
+
+  <script>
+  var ws=ws_open(location.origin.replace(/^http/, 'ws'));
+  function ws_open(url) {
+    ws=new WebSocket(url);
+    ws.onmessage = function (message) {tweet('tweet',message.data)};
+    ws.onerror = function(e) {console.log(e);tweet('tweet','CONNECTION ERROR ['+e.currentTarget.url+']')};
+    ws.onclose = function(user) {console.log(user);tweet('tweet','CONNECTION CLOSED');ws=0;};
+    document.getElementById('message').focus();
+    return ws;
+  }
+  function send_message(m) {
+    if (m) {
+      if (ws) {ws.send(m)} 
+      else {var req = new XMLHttpRequest(); req.open('GET',window.location+'m/'+m); req.send(); alert('Message delivered.')}
+      document.getElementById('message').value=""; document.getElementById('message').focus();
+    }
+  }
+  function tweet(ul_element,msg) {
+    var node = document.createElement("LI");
+    var textnode = document.createTextNode(msg);
+    node.appendChild(textnode);
+    document.getElementById(ul_element).appendChild(node);
+  }
+
+  </script>
+
+</body>
 </html>
