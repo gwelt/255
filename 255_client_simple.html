@@ -19,7 +19,8 @@
   <form action=javascript:void(0); onsubmit=send_message(document.getElementById('message').value)><input id='message' type='text'></form>
 
   <script>
-  var ws=ws_open(location.origin.replace(/^http/, 'ws'));
+  var hostname_port=location.hostname+":3000";
+  var ws=ws_open("ws://"+hostname_port);
   function ws_open(url) {
     ws=new WebSocket(url);
     ws.onmessage = function (message) {tweet('tweet',message.data)};
@@ -31,7 +32,7 @@
   function send_message(m) {
     if (m) {
       if (ws) {ws.send(m)} 
-      else {var req = new XMLHttpRequest(); req.open('GET',window.location+'m/'+m); req.send(); alert('Message delivered.')}
+      else {var req = new XMLHttpRequest(); req.open('GET','http://'+hostname_port+'/m/'+m); req.send(); alert('Message delivered.')}
       document.getElementById('message').value=""; document.getElementById('message').focus();
     }
   }
