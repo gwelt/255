@@ -15,5 +15,5 @@ wss.on('connection', (ws) => {
 });
 var credit=120;
 setInterval(function(){credit=120},60*60000);
-function safe_text(text) {return unescape(text).replace(/[^\w\säüöÄÜÖß\.,'!\@#$^&%*()+=-\[\]\/{}\|:\?]/g,'').slice(0,256)}
+function safe_text(text) {return unescape(text).replace(/[^\w\s\däüöÄÜÖß\.,'!\@#$^&%*()+=-\[\]\/{}\|:\?]/g,'').slice(0,256)}
 function broadcast(text) {if (credit>0) {try{wss.clients.forEach((ws) => {ws.send(safe_text(text))})} catch(err){}; credit--}}
