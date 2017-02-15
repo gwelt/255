@@ -15,7 +15,7 @@
 </head>
 <body>
 
-  <ul id=tweet></ul>
+  <ul id=tweet></ul><br><br>
   <form action=javascript:void(0); onsubmit=send_message(document.getElementById('message').value)><input id='message' type='text'></form>
 
   <script>
@@ -41,6 +41,7 @@
     var textnode = document.createTextNode(msg);
     node.appendChild(textnode);
     document.getElementById(ul_element).appendChild(node);
+    window.scrollTo(0,document.body.scrollHeight);
   }
 
   </script>
