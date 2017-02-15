@@ -4,7 +4,10 @@ var ws_255=new WebSocket("ws://"+process.argv[2]);
 const myname="(Robot)";
 var interval;
 
-ws_255.on('open', function opened() {say("Hi. I am a robot.")});
+ws_255.on('open', function opened() {
+  say("Hi. I am a robot.")
+  setInterval(function(){ws_255.send('',function ack(err){if (err) {process.exit()}})},60000); // send empty message every minute to stay connected, exit if sending fails
+});
 ws_255.on('error', function(e) {console.log(get_time()+' '+e+'\nTry this: node this.js [websocket-server]:[port]');process.exit()});
 ws_255.on('close', function(user) {process.exit()});
 ws_255.on('message', function incoming(data, flags) {
