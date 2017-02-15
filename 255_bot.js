@@ -12,11 +12,13 @@ ws_255.on('error', function(e) {console.log(get_time()+' '+e+'\nTry this: node t
 ws_255.on('close', function(user) {process.exit()});
 ws_255.on('message', function incoming(data, flags) {
   if (!data.startsWith(myname)) {
+    if (/--status/i.test(data)) {say('status: at your service')}
+    if (/--help/i.test(data)) {say('help: Hi | time | fortune | ping | ping off')}
     if (data.startsWith('Hi')) {say('Hi there.')}
     if (data.includes('time')) {say('The time is '+get_time()+'.')}
     if (data.includes('fortune')) {say(require('child_process').execSync('fortune',{stdio:'pipe'}).toString().replace(/[\r\n]/g,' '))}
-    if (data=='PING') {say('PONG');clearInterval(interval);interval=setInterval(function(){say("I'm alive! "+get_time())},30*60000)}
-    if (data=='PING OFF') {say('Interval cleared.');clearInterval(interval)}
+    if (/^ping$/i.test(data)) {say('PONG');clearInterval(interval);interval=setInterval(function(){say("I'm alive! "+get_time())},30*60000)}
+    if (/^ping\ off$/i.test(data)) {say('Interval cleared.');clearInterval(interval)}
   }
 });
 
