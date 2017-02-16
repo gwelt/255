@@ -9,10 +9,10 @@ const server = express()
   .listen(3000);
 const wss = new SocketServer({ server });
 wss.on('connection', (ws) => {
-  ws.send('WELCOME');
-  broadcast('CLIENT CONNECTED');
+  ws.send('WELCOME #'+wss.clients.length);
+  //broadcast('CLIENT CONNECTED');
   ws.on('message', (msg) => {if (msg) {broadcast(msg)}});
-  ws.on('close', () => {broadcast('CLIENT DISCONNECTED')});
+  //ws.on('close', () => {broadcast('CLIENT DISCONNECTED')});
 });
 var credit=120;
 setInterval(function(){credit=120},60*60000);
