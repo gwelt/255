@@ -23,7 +23,7 @@ ws_255.on('close', function(user) {process.exit()});
 ws_255.on('message', function incoming(data, flags) {
   message(data);
   if (!data.startsWith(myname)) {
-    if (/--status/i.test(data)) {say('status: printer is '+printer_is)}
+    if (/--status/i.test(data)) {say(printer_is)}
     if (/--help/i.test(data)) {say('help: printer on|off')}
     if (/printer\ off/i.test(data)) {say('printer is OFF');printer_is='OFF'}
     if (/printer\ on/i.test(data)) {say('printer is ON');printer_is='ON'}
@@ -43,6 +43,7 @@ function message(msg) {
   msg=msg.replace(/[äüöÄÜÖß]/g,function(m){return mapUmlaute[m]});
   lcd.send(msg);
   if (printer_is=='ON') {
+    msg=msg.replace(/\ {2,}/g," ");
     msg=get_time()+" "+msg;
     require('child_process').execSync('echo "'+msg+'" > /dev/ttyS0','e');      
   }

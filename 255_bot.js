@@ -5,14 +5,13 @@ const myname="(Robot)";
 var interval;
 
 ws_255.on('open', function opened() {
-  say("Hi. I am a robot.")
   setInterval(function(){ws_255.send('',function ack(err){if (err) {process.exit()}})},60000); // send empty message every minute to stay connected, exit if sending fails
 });
 ws_255.on('error', function(e) {console.log(get_time()+' '+e+'\nTry this: node this.js [websocket-server]:[port]');process.exit()});
 ws_255.on('close', function(user) {process.exit()});
 ws_255.on('message', function incoming(data, flags) {
   if (!data.startsWith(myname)) {
-    if (/--status/i.test(data)) {say('status: at your service')}
+    if (/--status/i.test(data)) {say('at your service')}
     if (/--help/i.test(data)) {say('help: Hi | time | fortune | ping | ping off')}
     if (data.startsWith('Hi')) {say('Hi there.')}
     if (data.includes('time')) {say('The time is '+get_time()+'.')}

@@ -12,7 +12,7 @@ ws_255.on('error', function(e) {console.log(e+'\nTry this: node this.js [websock
 ws_255.on('close', function(user) {process.exit()});
 ws_255.on('message', function incoming(data, flags) {
   if (!data.startsWith(myname)) {
-    if (/--status/i.test(data)) {say('status: listening')}
+    if (/--status/i.test(data)) {say('listening')}
     if (/--help/i.test(data)) {say('help: output-device only')}
   }
 });
