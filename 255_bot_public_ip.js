@@ -28,15 +28,9 @@ function check_ip() {
     var res=""; 
     r.on('data', function(d) {res+=d}); 
     r.on('end', function() {if (current_ip!=res) {if (current_ip!="") {say(res)}; current_ip=res;}});
-  })
+  }).on('error',(e)=>{console.log(get_time()+' '+e+'\nCould not connect to publicIPserver.');process.exit()})	
 }
 
 function say(text) {ws_255.send(myname+' '+text)}
 Date.prototype.addHours= function(h){this.setHours(this.getHours()+h); return this;}
-function get_time() {
-  var date=new Date().addHours(1);
-  var hour = date.getHours(); hour = (hour < 10 ? "0" : "") + hour;
-  var min  = date.getMinutes(); min = (min < 10 ? "0" : "") + min;
-  return hour+":"+min;
-}
-
+function get_time() {var date=new Date().addHours(1);var hour=date.getHours();hour=(hour<10?"0":"")+hour;var min=date.getMinutes();min=(min<10?"0":"")+min;return hour+""+min;}

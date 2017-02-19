@@ -1,7 +1,7 @@
 const WebSocket=require('ws');
 var ws_255=new WebSocket("ws://"+process.argv[2]);
 
-const myname="(LCD_PRINTER)";
+const myname="(BOX)";
 const interface="wlan0";
 const printer="/dev/ttyS0";
 const baudrate="9600";
@@ -24,7 +24,7 @@ ws_255.on('close', function(user) {process.exit()});
 ws_255.on('message', function incoming(data, flags) {
   message(data);
   if (!data.startsWith(myname)) {
-    if (/--status/i.test(data)) {say('P:'+printer_is+' L:'+light_is)}
+    if (/--status/i.test(data)) {say('PRINTER:'+printer_is+' LIGHT:'+light_is)}
     if (/--help/i.test(data)) {say('help: printer on/off | light on/off')}
     if (/printer\ off/i.test(data)) {say('printer is OFF');printer_is='OFF'}
     if (/printer\ on/i.test(data)) {say('printer is ON');printer_is='ON'}
