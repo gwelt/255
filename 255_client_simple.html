@@ -25,10 +25,11 @@
   function ws_open(url) {
     ws=new WebSocket(url);
     ws.onmessage = function (message) {tweet('tweet',message.data)};
-    ws.onerror = function(e) {console.log(e);tweet('tweet','CONNECTION ERROR ['+e.currentTarget.url+']');reconnects=0};
+    ws.onerror = function(e) {console.log(e);tweet('tweet','CONNECTION ERROR ['+e.currentTarget.url+']')};
     ws.onclose = function(user) {console.log(user);tweet('tweet','CONNECTION CLOSED');ws=0;if (--reconnects>0) {
       tweet('tweet','TRYING TO RECONNECT...');setTimeout(function(){ws=ws_open("ws://"+hostname_port)},3000);
     }};
+    setInterval(function(){ws.send('')},60000); // send empty message every minute to stay connected
     document.getElementById('message').focus();
     return ws;
   }
