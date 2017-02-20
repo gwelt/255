@@ -9,7 +9,11 @@ const server = express()
 const wss = new SocketServer({ server });
 wss.on('connection', (ws) => {
   ws.send('WELCOME #'+wss.clients.length+' (credit: '+credit+')');
-  ws.on('message', (msg) => {if (msg) {broadcast(msg)}});
+  ws.on('message', (msg) => {
+  	var auth="("+ws.name+") "; if (auth=="(undefined)") {auth=""};
+  	if (msg) {broadcast(auth+msg)}
+    if (/^\/nick\ /i.test(msg)) {var n=/^\/nick\ (.*)/i.exec(msg); ws.name=safe_text(n[1]); ws.send('Hi, '+ws.name+'.'); }
+  });
 });
 var credit=99; setInterval(function(){credit=99},60*60000);
 function safe_text(text) {return unescape(text).replace(/[^\w\s\däüöÄÜÖß\.,'!\@#$^&%*()\+=\-\[\]\/{}\|:\?]/g,'').slice(0,256)}
