@@ -31,7 +31,7 @@ ws_255.on('message', function incoming(data, flags) {
     if (/light\ on/i.test(data)) {require('child_process').execSync(__dirname+'/sendElro -i 1 -u 23 -r 15 -t');say('light is ON');light_is="ON"}
     if (/light\ off/i.test(data)) {require('child_process').execSync(__dirname+'/sendElro -i 1 -u 23 -r 15 -f');say('light is OFF');light_is="OFF"}
     if (/bssid/i.test(data)) {say(require('child_process').execSync('iwlist wlan0 scanning | grep -o ..:..:..:..:..:..',{stdio:'pipe'}).toString().replace(/[\r\n]/g,' '))}
-    if (/essid/i.test(data)) {say(require('child_process').execSync("iwlist wlan0 scanning | grep ESSID",{stdio:'pipe'}).toString().replace(/[\r\n]/g,' '))}
+    if (/essid/i.test(data)) {say(require('child_process').execSync("iwlist wlan0 scanning | grep ESSID",{stdio:'pipe'}).toString().replace(/\ /g,''))}
   }
 });
 
