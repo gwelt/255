@@ -7,14 +7,18 @@ const server = express()
   .get('*', function(req, res) {res.send('404')})
   .listen(3000);
 const wss = new SocketServer({ server });
+var latest_message="JUST STARTED.";
 wss.on('connection', (ws) => {
-  ws.send('WELCOME #'+wss.clients.length+' (credit: '+credit+')');
+  ws.send('WELCOME #'+wss.clients.length+' ('+credit+')');
   ws.on('message', (msg) => {
     var auth="("+ws.name+") "; if (!ws.name) {auth=""};
-    if (msg) {broadcast(auth+msg)}
-    if (/^\/nick\ /i.test(msg)) {var n=/^\/nick\ (.*)/i.exec(msg); ws.name=safe_text(n[1]); ws.send('Hi, '+ws.name+'.'); }
+    if (/^\//i.test(msg)) {
+      if (/^\/nick\ /i.test(msg)) {var n=/^\/nick\ (.*)/i.exec(msg); ws.name=safe_text(n[1]); ws.send('Welcome, '+ws.name+'.');}
+      if (/^\/repeat/i.test(msg)) {ws.send(latest_message)}
+    } 
+    else if (msg) {broadcast(auth+msg)}
   });
 });
 var credit=99; setInterval(function(){credit=99},60*60000);
 function safe_text(text) {return unescape(text).replace(/[^\w\s\däüöÄÜÖß\.,'!\@#$^&%*()\+=\-\[\]\/{}\|:\?]/g,'').slice(0,256)}
-function broadcast(text) {if (credit>0) {try{wss.clients.forEach((ws) => {ws.send(safe_text(text))})} catch(err){}; credit--}}
+function broadcast(text) {if (credit>0) {try{wss.clients.forEach((ws) => {ws.send(safe_text(text))})} catch(err){}; credit--; latest_message=safe_text(text);}}
