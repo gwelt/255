@@ -13,10 +13,11 @@ wss.on('connection', (ws) => {
   ws.on('message', (msg) => {
     var auth="("+ws.name+") "; if (!ws.name) {auth=""};
     if (/^\//i.test(msg)) {
+      if (/^\/help/i.test(msg)) {ws.send('help: /nick [name] | /repeat | /credit | /restart')}
       if (/^\/nick\ /i.test(msg)) {var n=/^\/nick\ (.*)/i.exec(msg); ws.name=safe_text(n[1]); ws.send('Welcome, '+ws.name+'.');}
-      if (/^\/repeat$/i.test(msg)) {ws.send(latest_message)}
-      if (/^\/reset\ credit$/i.test(msg)) {credit=99;ws.send('credit: '+credit)}
-      if (/^\/restart$/i.test(msg)) {ws.send('restarting...');process.exit()}
+      if (/^\/repeat/i.test(msg)) {ws.send(latest_message)}
+      if (/^\/credit$/i.test(msg)) {credit=99;ws.send('Credit: '+credit)}
+      if (/^\/restart$/i.test(msg)) {ws.send('Ok. Restarting.');setTimeout(function(){process.exit()},3000)}
     } 
     else if (msg) {broadcast(auth+msg)}
   });
