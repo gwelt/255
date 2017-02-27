@@ -26,7 +26,7 @@ ws_255.on('message', function incoming(data, flags) {
   if (!data.startsWith(myname)) {
     if (/--status/i.test(data)) {say('DRUCKER:'+printer_is+' LICHT:'+light_is);data="bssid";}
     if (/--help/i.test(data)) {say('help: drucker an/aus | licht an/aus | bssid | essid')}
-    if (/drucker\ an/i.test(data)) {say('          DRUCKER AN'+get_time(1));printer_is='AN'}
+    if (/drucker\ an/i.test(data)) {say('          DRUCKER AN '+get_time(1));printer_is='AN'}
     if (/drucker\ aus/i.test(data)) {say('          DRUCKER AUS'+get_time(1));printer_is='AUS'}
     if (/licht\ an/i.test(data)) {require('child_process').execSync(__dirname+'/sendElro -i 1 -u 23 -r 15 -t');say('          LICHT AN   '+get_time(1));light_is="AN"}
     if (/licht\ aus/i.test(data)) {require('child_process').execSync(__dirname+'/sendElro -i 1 -u 23 -r 15 -f');say('          LICHT AUS  '+get_time(1));light_is="AUS"}
