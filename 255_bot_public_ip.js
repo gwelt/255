@@ -19,7 +19,7 @@ ws_255.on('message', function incoming(data, flags) {
   if (!data.startsWith(myname)) {
     if (/--status/i.test(data)) {say(current_ip)}
     if (/--help/i.test(data)) {say('help: get public ip')}
-    if (/get\ public\ ip/i.test(data)) {check_ip();say(current_ip)}
+    if (/get\ public\ ip/i.test(data)) {check_ip();say('     '+current_ip)}
   }
 });
 
