@@ -1,15 +1,14 @@
-const WebSocket=require('ws');
-var ws_255=new WebSocket("ws://"+process.argv[2]);
+const Configuration = require('./255_conf.js');
+var config = new Configuration();
+const WebSocket = require('ws');
+var ws_255 = new WebSocket(config.websocket_url);
+ws_255.on('open', function() {ws_255_connected=true;setInterval(function(){ws_255.send('',function ack(err){if (err) {process.exit()}})},config.websocket_ping_delay)}); // send empty message to stay connected, exit if sending fails
+ws_255.on('error', function(e) {process.exit()});
+ws_255.on('close', function(user) {process.exit()});
 
 const myname="(SnakeListener)";
 var ws_255_connected=false;
 
-ws_255.on('open', function opened() {
-  ws_255_connected=true;
-  setInterval(function(){ws_255.send('',function ack(err){if (err) {process.exit()}})},60000); // send empty message every minute to stay connected, exit if sending fails
-});
-ws_255.on('error', function(e) {console.log(e+'\nTry this: node this.js [websocket-server]:[port]');process.exit()});
-ws_255.on('close', function(user) {process.exit()});
 ws_255.on('message', function incoming(data, flags) {
   if (!data.startsWith(myname)) {
     if (/--status/i.test(data)) {say('listening')}

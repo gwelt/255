@@ -1,5 +1,10 @@
-const WebSocket=require('ws');
-var ws_255=new WebSocket("ws://"+process.argv[2]);
+const Configuration = require('./255_conf.js');
+var config = new Configuration();
+const WebSocket = require('ws');
+var ws_255 = new WebSocket(config.websocket_url);
+//ws_255.on('open', function() {setInterval(function(){ws_255.send('',function ack(err){if (err) {process.exit()}})},config.websocket_ping_delay)}); // send empty message to stay connected, exit if sending fails
+ws_255.on('error', function(e) {process.exit()});
+ws_255.on('close', function(user) {process.exit()});
 
 const myname="(BOX)";
 const interface="wlan0";
@@ -17,17 +22,17 @@ ws_255.on('open', function() {
   p.execSync('stty -F '+printer+' '+baudrate);
   var welcome="================================\\nIP: "+require('os').networkInterfaces()[interface][0]['address']+" ("+interface+")\\nListening @"+process.argv[2]+"\\n================================"; //\\nPrinter: "+printer+" @"+baudrate+" baud
   p.execSync('echo "'+welcome+'" > '+printer,'e');
-  setInterval(function(){ws_255.send('',function ack(err){if (err) {process.exit()}})},60000); // send empty message every minute to stay connected, exit if sending fails
+  setInterval(function(){ws_255.send('',function ack(err){if (err) {process.exit()}})},config.websocket_ping_delay); // send empty message to stay connected, exit if sending fails
 });
 ws_255.on('error', function(e) {console.log(get_time()+' '+e+'\nTry this: node this.js [websocket-server]:[port]');process.exit()});
 ws_255.on('close', function(user) {process.exit()});
 ws_255.on('message', function incoming(data, flags) {
   message(data);
   if (!data.startsWith(myname)) {
-    if (/--status/i.test(data)) {say('DRUCKER:'+printer_is+' LICHT:'+light_is);data="bssid";}
+    if (/--status/i.test(data)) {say('DRUCKER:'+printer_is+' LICHT:'+light_is)}
     if (/--help/i.test(data)) {say('help: drucker an/aus | licht an/aus | bssid | essid')}
-    if (/drucker\ an/i.test(data)) {say('          DRUCKER AN '+get_time(1));printer_is='AN'}
-    if (/drucker\ aus/i.test(data)) {say('          DRUCKER AUS'+get_time(1));printer_is='AUS'}
+    if (/drucker\ an/i.test(data)) {printer_is='AN';say('          DRUCKER AN '+get_time(1))}
+    if (/drucker\ aus/i.test(data)) {printer_is='AUS';say('          DRUCKER AUS'+get_time(1))}
     if (/licht\ an/i.test(data)) {require('child_process').execSync(__dirname+'/sendElro -i 1 -u 23 -r 15 -t');say('          LICHT AN   '+get_time(1));light_is="AN"}
     if (/licht\ aus/i.test(data)) {require('child_process').execSync(__dirname+'/sendElro -i 1 -u 23 -r 15 -f');say('          LICHT AUS  '+get_time(1));light_is="AUS"}
     if (/bssid/i.test(data)) {say(require('child_process').execSync('iwlist wlan0 scanning | grep -o ..:..:..:..:..:..',{stdio:'pipe'}).toString().replace(/[\r\n]/g,' '))}

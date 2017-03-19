@@ -1,19 +1,19 @@
-const WebSocket=require('ws');
-var ws_255=new WebSocket("ws://"+process.argv[2]);
+const Configuration = require('./255_conf.js');
+var config = new Configuration();
+const WebSocket = require('ws');
+var ws_255 = new WebSocket(config.websocket_url);
+ws_255.on('open', function() {setInterval(function(){ws_255.send('',function ack(err){if (err) {process.exit()}})},config.websocket_ping_delay)}); // send empty message to stay connected, exit if sending fails
+ws_255.on('error', function(e) {process.exit()});
+ws_255.on('close', function(user) {process.exit()});
 
 const myname="(Robot)";
-var interval;
 
-ws_255.on('open', function opened() {
-  setInterval(function(){ws_255.send('',function ack(err){if (err) {process.exit()}})},60000); // send empty message every minute to stay connected, exit if sending fails
-});
-ws_255.on('error', function(e) {console.log(get_time()+' '+e+'\nTry this: node this.js [websocket-server]:[port]');process.exit()});
-ws_255.on('close', function(user) {process.exit()});
+var interval;
 ws_255.on('message', function incoming(data, flags) {
   if (!data.startsWith(myname)) {
     if (/--status/i.test(data)) {say('at your service')}
     if (/--help/i.test(data)) {say('help: Hi | time | fortune | ping | ping off')}
-    if (data.includes('Hi')) {say('Hi there.')}
+    if ((data.match(/\Whi\W/i))||(data.match(/^hi$/i))) {say('Hi there.')}
     if (data.includes('time')) {say('The time is '+get_time()+'.')}
     if (data.includes('fortune')) {say(require('child_process').execSync('fortune',{stdio:'pipe'}).toString().replace(/[\r\n]/g,' '))}
     if (/ping$/i.test(data)) {say('PONG');clearInterval(interval);interval=setInterval(function(){say("I'm alive! "+get_time())},30*60000)}
