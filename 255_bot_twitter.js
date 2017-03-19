@@ -19,8 +19,8 @@ ws_255.on('message', function incoming(data, flags) {
   if (!data.startsWith(myname)) {
     if (/--status/i.test(data)) {say('listening')}
     if (/--help/i.test(data)) {say('help: lt [screen_name] [count]')}
-    //if (/^latesttweet$/i.test(data)) {latest_tweet('heiseonline',1)}
-    var t=(/^lt\ ([\w_]+)\ (\d)$/i.exec(data)); if (t) {latest_tweet(t[1],t[2])}; //post latest tweets
+    //if (/latesttweet$/i.test(data)) {latest_tweet('heiseonline',1)}
+    var t=(/lt\ ([\w_]+)\ (\d)$/i.exec(data)); if (t) {latest_tweet(t[1],t[2])}; //post latest tweets
   }
 });
 
