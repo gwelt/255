@@ -1,5 +1,4 @@
-const Configuration = require('./255_conf.js');
-var config = new Configuration();
+var config = require('./config.json');
 const WebSocket = require('ws');
 var ws_255 = new WebSocket(config.websocket_url);
 ws_255.on('open', function() {ws_255_connected=true;setInterval(function(){ws_255.send('',function ack(err){if (err) {process.exit()}})},config.websocket_ping_delay)}); // send empty message to stay connected, exit if sending fails
@@ -17,5 +16,5 @@ ws_255.on('message', function incoming(data, flags) {
 });
 
 function say(text) {ws_255.send(myname+' '+text)}
-var ws_snake=new WebSocket("ws://localhost:3000");
+var ws_snake=new WebSocket("ws://255.gwelt.net:3001");
 ws_snake.on('message', function incoming(data, flags) {if (!data.startsWith('[') && ws_255_connected) {ws_255.send(data)}});
