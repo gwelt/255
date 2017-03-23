@@ -1,10 +1,10 @@
 {
-  "websocket_url" : "ws://255.gwelt.net:3000",
+  "websocket_url" : "ws://your-websocket-url:3000",
   "websocket_ping_delay" : 60000,
-  "publicIPserver_url" : "local.gwelt.net",
-  "twitter_consumer_key" : "laBMpI12fTAuMoSGGUiyWQ3s4",
-  "twitter_consumer_secret" : "FNp10a0gx4zox1p1VQRuPQzlO0VRW7Bskicy46ZFi29w5D0rNV",
-  "twitter_access_token_key" : "144484262-EQ7mSMHzBejWRaejeXh4fFEwAZaQsdtDd65thDb5",
-  "twitter_access_token_secret" : "TtKLLZFWTUE4mxOv8yv3zNez3R4tQZahUVhCrT8uQGD2t",
-  "twitter_follow" : "3197921,15379430"
+  "publicIPserver_url" : "your-publicIP-url",
+  "twitter_consumer_key" : "",
+  "twitter_consumer_secret" : "",
+  "twitter_access_token_key" : "",
+  "twitter_access_token_secret" : "",
+  "twitter_follow" : ""
 }
