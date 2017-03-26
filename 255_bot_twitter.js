@@ -34,7 +34,7 @@ client.stream('statuses/filter', {follow: config.twitter_follow}, function(strea
 });
 
 function latest_tweet(_screen_name,_count) {
-  client.get('statuses/user_timeline', {screen_name: _screen_name, count:_count*2, include_rts:false, trim_user:true}, function(error, tweets, response) {
+  client.get('statuses/user_timeline', {screen_name: _screen_name, count:_count*3, include_rts:false, trim_user:true}, function(error, tweets, response) {
   if (!error) {
     tweets.forEach( (item,index) => {
       if (index<_count) {
