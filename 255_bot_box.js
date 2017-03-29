@@ -24,8 +24,6 @@ ws_255.on('open', function() {
   p.execSync('echo "'+welcome+'" > '+printer,'e');
   setInterval(function(){ws_255.send('',function ack(err){if (err) {process.exit()}})},config.websocket_ping_delay); // send empty message to stay connected, exit if sending fails
 });
-ws_255.on('error', function(e) {console.log(get_time()+' '+e+'\nTry this: node this.js [websocket-server]:[port]');process.exit()});
-ws_255.on('close', function(user) {process.exit()});
 ws_255.on('message', function incoming(data, flags) {
   message(data);
   if (!data.startsWith(myname)) {
@@ -45,25 +43,24 @@ ws_255.on('message', function incoming(data, flags) {
 
 function say(text) {ws_255.send(myname+' '+text)}
 Date.prototype.addHours= function(h){this.setHours(this.getHours()+h); return this;}
-function get_time(long) {var date=new Date().addHours(1);var hour=date.getHours();hour=(hour<10?"0":"")+hour;var min=date.getMinutes();min=(min<10?"0":"")+min;return hour+((long)?":":"")+min;}
+function get_time(long) {var date=new Date().addHours(2);var hour=date.getHours();hour=(hour<10?"0":"")+hour;var min=date.getMinutes();min=(min<10?"0":"")+min;return hour+((long)?":":"")+min;}
 function message(msg) {
   var mapUmlaute = {ä:"ae",ü:"ue",ö:"oe",Ä:"Ae",Ü:"Ue",Ö:"Oe",ß:"ss"};
   msg=msg.replace(/[äüöÄÜÖß]/g,function(m){return mapUmlaute[m]});
   lcd.send(msg);
-  one_beep();
+  if (beep_is!='AUS') {one_beep()};
   if (printer_is!='AUS') {
     msg=msg.replace(/\ {2,}/g," ");
     msg=get_time()+" "+msg;
-    require('child_process').execSync('echo "'+msg+'" > /dev/ttyS0','e');      
+    require('child_process').execSync('echo "'+msg+'" > /dev/ttyS0','e');
   }
 }
 
 var rpio = require('rpio');
 rpio.open(12, rpio.OUTPUT, rpio.LOW);
-function one_beep(){beep(1,20,0)};
+function one_beep(){beep(1,80,0)};
 function beep(times,duration,delay) {
   for (var i=0;i<times;i++) {
-    setTimeout(function(){rpio.write(12, rpio.HIGH)},0+i*delay);  
-    setTimeout(function(){rpio.write(12, rpio.LOW)},duration+i*delay);  
+    setTimeout(function(){setTimeout(function(){rpio.write(12,rpio.LOW)},duration);rpio.write(12,rpio.HIGH)},i*delay);
   }
 }
