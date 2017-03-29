@@ -5,7 +5,7 @@ ws_255.on('open', function() {setInterval(function(){ws_255.send('',function ack
 ws_255.on('error', function(e) {process.exit()});
 ws_255.on('close', function(user) {process.exit()});
 
-const myname="(RPIzero)";
+const myname="(Robot)";
 
 var interval;
 ws_255.on('message', function incoming(data, flags) {
