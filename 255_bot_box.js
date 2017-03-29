@@ -36,8 +36,8 @@ ws_255.on('message', function incoming(data, flags) {
     if (/bssid/i.test(data)) {say(require('child_process').execSync('iwlist wlan0 scanning | grep -o ..:..:..:..:..:..',{stdio:'pipe'}).toString().replace(/[\r\n]/g,' '))}
     if (/essid/i.test(data)) {say(require('child_process').execSync("iwlist wlan0 scanning | grep ESSID",{stdio:'pipe'}).toString().replace(/\ /g,''))}
     var b=(/beep\ (\d)$/i.exec(data)); if (b) {if (beep_is!='AUS') {beep(b[1],20,100)}};
-    if (/beep\ an/i.test(data)) {beep_is='AN';say('             BEEP AN '+get_time(1))}
-    if (/beep\ aus/i.test(data)) {beep_is='AUS';say('            BEEP AUS '+get_time(1))}
+    if (/beep\ an/i.test(data)) {beep_is='AN';  say('           BEEP AN   '+get_time(1))}
+    if (/beep\ aus/i.test(data)) {beep_is='AUS';say('           BEEP AUS  '+get_time(1))}
   }
 });
 
