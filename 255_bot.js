@@ -5,7 +5,7 @@ ws_255.on('open', function() {setInterval(function(){ws_255.send('',function ack
 ws_255.on('error', function(e) {process.exit()});
 ws_255.on('close', function(user) {process.exit()});
 
-const myname="(Robot)";
+const myname="(RPIzero)";
 
 var interval;
 ws_255.on('message', function incoming(data, flags) {
@@ -22,4 +22,4 @@ ws_255.on('message', function incoming(data, flags) {
 
 function say(text) {ws_255.send(myname+' '+text)}
 Date.prototype.addHours= function(h){this.setHours(this.getHours()+h); return this;}
-function get_time() {var date=new Date().addHours(1);var hour=date.getHours();hour=(hour<10?"0":"")+hour;var min=date.getMinutes();min=(min<10?"0":"")+min;return hour+""+min;}
+function get_time() {var date=new Date().addHours(0);var hour=date.getHours();hour=(hour<10?"0":"")+hour;var min=date.getMinutes();min=(min<10?"0":"")+min;return hour+""+min;}

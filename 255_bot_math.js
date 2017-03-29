@@ -11,7 +11,7 @@ ws_255.on('message', function incoming(data, flags) {
   if (!data.startsWith(myname)) {
     if (/--status/i.test(data)) {say('at your service')}
     if (/--help/i.test(data)) {say('help: fib [1-999]')}
-    var d=(/^fib\ ?(\d{1,3})$/i.exec(data)); if (d) {say('fib('+d[1]+')='+fib(d[1]))};
+    var d=(/fib\ ?(\d{1,3})$/i.exec(data)); if (d) {say('fib('+d[1]+')='+fib(d[1]))};
   }
 });
 
