@@ -20,7 +20,7 @@ ws_255.on('open', function() {
   lcd.send('READY.');
   p=require('child_process');
   p.execSync('stty -F '+printer+' '+baudrate);
-  var welcome="================================\\nIP: "+require('os').networkInterfaces()[interface][0]['address']+" ("+interface+")\\nListening @"+process.argv[2]+"\\n================================"; //\\nPrinter: "+printer+" @"+baudrate+" baud
+  var welcome="================================\\nIP: "+require('os').networkInterfaces()[interface][0]['address']+" ("+interface+")\\nConnect @"+config.websocket_url+"\\n================================"; //\\nPrinter: "+printer+" @"+baudrate+" baud
   p.execSync('echo "'+welcome+'" > '+printer,'e');
   setInterval(function(){ws_255.send('',function ack(err){if (err) {process.exit()}})},config.websocket_ping_delay); // send empty message to stay connected, exit if sending fails
 });
@@ -28,16 +28,17 @@ ws_255.on('message', function incoming(data, flags) {
   message(data);
   if (!data.startsWith(myname)) {
     if (/--status/i.test(data)) {say('DRUCKER:'+printer_is+' LICHT:'+light_is+' BEEP:'+beep_is)}
-    if (/--help/i.test(data)) {say('help: drucker an/aus | licht an/aus | bssid | essid | beep [count] | beep an/aus')}
+    if (/--help/i.test(data)) {say('help: drucker an/aus | licht an/aus | bssid | essid | beep [count] | beep an/aus | shplst')}
     if (/drucker\ an/i.test(data)) {printer_is='AN';say('          DRUCKER AN '+get_time(1))}
     if (/drucker\ aus/i.test(data)) {printer_is='AUS';say('          DRUCKER AUS'+get_time(1))}
     if (/licht\ an/i.test(data)) {require('child_process').execSync(__dirname+'/sendElro -i 1 -u 23 -r 15 -t');say('          LICHT AN   '+get_time(1));light_is="AN"}
     if (/licht\ aus/i.test(data)) {require('child_process').execSync(__dirname+'/sendElro -i 1 -u 23 -r 15 -f');say('          LICHT AUS  '+get_time(1));light_is="AUS"}
     if (/bssid/i.test(data)) {say(require('child_process').execSync('iwlist wlan0 scanning | grep -o ..:..:..:..:..:..',{stdio:'pipe'}).toString().replace(/[\r\n]/g,' '))}
     if (/essid/i.test(data)) {say(require('child_process').execSync("iwlist wlan0 scanning | grep ESSID",{stdio:'pipe'}).toString().replace(/\ /g,''))}
-    var b=(/beep\ (\d)$/i.exec(data)); if (b) {if (beep_is!='AUS') {beep(b[1],20,100)}};
+    let b=(/beep\ (\d)$/i.exec(data)); if (b) {if (beep_is!='AUS') {beep(b[1],20,100)}};
     if (/beep\ an/i.test(data)) {beep_is='AN';  say('           BEEP AN   '+get_time(1))}
     if (/beep\ aus/i.test(data)) {beep_is='AUS';say('           BEEP AUS  '+get_time(1))}
+    let shplst=(/shplst\ ([^\ ]*)$/i.exec(data)); if (shplst) {say('PRINTING SHOPPINGLIST');get_shplst('shp.gwelt.net',shplst[1],'LIDL',send_to_printer)}
   }
 });
 
@@ -63,4 +64,24 @@ function beep(times,duration,delay) {
   for (var i=0;i<times;i++) {
     setTimeout(function(){setTimeout(function(){rpio.write(12,rpio.LOW)},duration);rpio.write(12,rpio.HIGH)},i*delay);
   }
+}
+
+function get_shplst(host,id,shop,callback) {
+  require('http').get({host:host, path:'?mode=escapedText&id='+id+'&shop='+shop}, function(r) {
+    var res="";
+    r.on('data', function(d) {res+=d}); 
+    r.on('end', function() {callback(res)});
+  }).on('error',(e)=>{setTimeout(function(){process.exit()},60000)})
+}
+
+function send_to_printer(msg) {
+  msg=unescape(msg);
+  var mapUmlaute = {ä:"ae",ü:"ue",ö:"oe",Ä:"Ae",Ü:"Ue",Ö:"Oe",ß:"ss"};
+  msg=msg.replace(/[äüöÄÜÖß]/g,function(m){return mapUmlaute[m]}).toUpperCase();
+  var res="";
+  var items = msg.split('\n');
+  items.forEach( (i) => {var x=/###\ ([^\n]*)/.exec(i); if (x) {var c=(32-5-x[1].length); i+=' '; for (let y=0;y<c;y++) {i+='#'}; res+=i+'\n'} else {res+='    '+i+'\n'}});
+  var p=require('child_process');
+  p.execSync('stty -F '+printer+' '+baudrate);
+  p.execSync('echo "'+res+'" > '+printer,'e');
 }
