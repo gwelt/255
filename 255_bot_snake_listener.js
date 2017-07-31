@@ -7,4 +7,4 @@ function messagehandler(data,say) {
 const WebSocket = require('ws');
 var ws_snake=new WebSocket("ws://localhost:3000");
 ws_snake.on('open', function() {setInterval(function(){ws_snake.send('',function ack(err){if (err) {process.exit()}})},60000)});
-ws_snake.on('message', function incoming(data, flags) {if (!data.startsWith('[')) {webSocket.send(data)}});
+ws_snake.on('message', function incoming(data, flags) {if (!data.startsWith('[') && webSocket.readyState==1) {webSocket.send(data)}});
