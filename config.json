@@ -1,11 +1,11 @@
 {
   "websocket_url" : "ws://localhost:3000",
   "websocket_ping_delay" : 60000,
-  "publicIPserver_url" : "local.gwelt.net",
-  "twitter_consumer_key" : "1TiNyndEXRXiQMIYxo8tcciDx",
-  "twitter_consumer_secret" : "7jZxQMDun784HsAgy3Jj6Ed1R2KXskxj6zGrLKLk9qCuKX2bpp",
-  "twitter_access_token_key" : "144484262-bi344EFigoB1pUMYAm4BK8G4kLmtbEbOjz57B2gZ",
-  "twitter_access_token_secret" : "0XAiJ1QwOXp80ORi046NCG8ACkbXyndZZBjNrxsqzB4Ia",
+  "publicIPserver_url" : "local.localhost",
+  "twitter_consumer_key" : "",
+  "twitter_consumer_secret" : "",
+  "twitter_access_token_key" : "",
+  "twitter_access_token_secret" : "",
   "twitter_follow" : "20577168",
   "twitter_all" : "@tagesschau_eil => 20577168"
 }
