@@ -1,5 +1,5 @@
 const webSocket = require('./255_ws_module').startWebsocket('BOX',(msg,callback)=>messagehandler(msg,callback));
-function messagehandler(data,say) {
+function messagehandler(data,no_say) {
   message(data);
   if (/--status/i.test(data)) {say('DRUCKER:'+printer_is+' LICHT:'+light_is+' BEEP:'+beep_is)}
   if (/--help/i.test(data)) {say('help: drucker an/aus | licht an/aus | bssid | essid | beep [count] | beep an/aus | shplst')}
@@ -13,6 +13,11 @@ function messagehandler(data,say) {
   if (/beep\ an/i.test(data)) {beep_is='AN';  say('           BEEP AN   '+get_time(1))}
   if (/beep\ aus/i.test(data)) {beep_is='AUS';say('           BEEP AUS  '+get_time(1))}
   let shplst=(/shplst\ ([^\ ]*)$/i.exec(data)); if (shplst) {say('PRINTING SHOPPINGLIST');get_shplst('shp.gwelt.net',shplst[1],'LIDL',send_to_printer)}
+}
+
+function say(msg) {
+  webSocket.say(msg);
+  message('(BOX) '+msg);
 }
 
 var config = require('./config.json');
