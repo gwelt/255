@@ -1,7 +1,7 @@
 const webSocket = require('./255_ws_module').startWebsocket('Robot',(msg,callback)=>messagehandler(msg,callback));
 function messagehandler(data,say) {
   if (/--help/i.test(data)) {say('help: Hi | time | fortune | ping | ping off')}
-  if (/--status/i.test(data)) {say('status: at your service')}
+  if (/--status/i.test(data)) {say('at your service')}
   if ((data.match(/\Whi\W/i))||(data.match(/^hi$/i))) {say('Hi there.')}	
   if (data.includes('time')) {say('The time is '+get_time(1)+'.')}
   if (data.includes('fortune')) {say(require('child_process').execSync('fortune',{stdio:'pipe'}).toString().replace(/[\r\n]/g,' '))}
