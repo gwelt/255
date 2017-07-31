@@ -2,7 +2,7 @@ const webSocket = require('./255_ws_module').startWebsocket('BOX',(msg,callback)
 function messagehandler(data,no_say) {
   message(data);
   if (/--status/i.test(data)) {say('DRUCKER:'+printer_is+' LICHT:'+light_is+' BEEP:'+beep_is)}
-  if (/--help/i.test(data)) {say('help: drucker an/aus | licht an/aus | bssid | essid | beep [count] | beep an/aus | shplst')}
+  if (/--help/i.test(data)) {say('help: drucker an/aus | licht an/aus | bssid | essid | beep [count] | beep an/aus | shplst [id]')}
   if (/drucker\ an/i.test(data)) {printer_is='AN';say('          DRUCKER AN '+get_time(1))}
   if (/drucker\ aus/i.test(data)) {printer_is='AUS';say('          DRUCKER AUS'+get_time(1))}
   if (/licht\ an/i.test(data)) {require('child_process').execSync(__dirname+'/sendElro -i 1 -u 23 -r 15 -t');say('          LICHT AN   '+get_time(1));light_is="AN"}
