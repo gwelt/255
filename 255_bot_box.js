@@ -13,6 +13,15 @@ function messagehandler(data,no_say) {
   if (/beep\ an/i.test(data)) {beep_is='AN';  say('           BEEP AN   '+get_time(1))}
   if (/beep\ aus/i.test(data)) {beep_is='AUS';say('           BEEP AUS  '+get_time(1))}
   let shplst=(/shplst\ ([^\ ]*)$/i.exec(data)); if (shplst) {say('PRINTING SHOPPINGLIST');get_shplst('shp.gwelt.net',shplst[1],'LIDL',send_to_printer)}
+  if (/sudoku/i.test(data)) {
+    say('PRINTING SUDOKU');
+    var puzzle=require('../sudoku/sudoku_generator.js').generate();
+    var s=require('../sudoku/sudoku_solver.js').solve(puzzle[0]);
+    var hints=puzzle[0].split('').map((c)=>{return c=='-'?0:1}).reduce((l,r)=>{return l+r},0);
+    send_to_printer('\nPUZZLE:\n'+print_2d(puzzle[0])+'\n\nSOLUTION:\n'+print_2d(puzzle[1])+'\nRATING: '+s.stats.dig_needed+'.'+hints+'\n\n');
+  }
+
+
 }
 
 function say(msg) {
@@ -78,4 +87,16 @@ function send_to_printer(msg) {
   var p=require('child_process');
   p.execSync('stty -F '+printer+' '+baudrate);
   p.execSync('echo "'+res+'" > '+printer,'e');
+}
+
+function print_2d(puzzle) {
+  var res = '';
+  for (var row = 0; row < 9; row++) {
+    for (var col = 0; col < 9; col++) {
+      res += [""," "," ","  "," "," ","  "," "," "][col];
+      if (['1','2','3','4','5','6','7','8','9'].indexOf(puzzle[row*9+col])>=0) {res += puzzle[row*9+col]} else {res+= '_'}
+    }
+    res += ['\n','\n','\n\n','\n','\n','\n\n','\n','\n','\n'][row];
+  }
+  return res;
 }
