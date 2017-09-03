@@ -2,7 +2,7 @@ const webSocket = require('./255_ws_module').startWebsocket('BOX',(msg,callback)
 function messagehandler(data,no_say) {
   message(data);
   if (/--status/i.test(data)) {say('DRUCKER:'+printer_is+' LICHT:'+light_is+' BEEP:'+beep_is)}
-  if (/--help/i.test(data)) {say('help: drucker an/aus | licht an/aus | bssid | essid | beep [count] | beep an/aus | shplst [id]')}
+  if (/--help/i.test(data)) {say('help: drucker an/aus | licht an/aus | bssid | essid | beep [count] | beep an/aus | sudoku | shplst [id]')}
   if (/drucker\ an/i.test(data)) {printer_is='AN';say('          DRUCKER AN '+get_time(1))}
   if (/drucker\ aus/i.test(data)) {printer_is='AUS';say('          DRUCKER AUS'+get_time(1))}
   if (/licht\ an/i.test(data)) {require('child_process').execSync(__dirname+'/sendElro -i 1 -u 23 -r 15 -t');say('          LICHT AN   '+get_time(1));light_is="AN"}
@@ -15,13 +15,11 @@ function messagehandler(data,no_say) {
   let shplst=(/shplst\ ([^\ ]*)$/i.exec(data)); if (shplst) {say('PRINTING SHOPPINGLIST');get_shplst('shp.gwelt.net',shplst[1],'LIDL',send_to_printer)}
   if (/sudoku/i.test(data)) {
     say('PRINTING SUDOKU');
-    var puzzle=require('../sudoku/sudoku_generator.js').generate();
+    var puzzle=require('../sudoku/sudoku_generator.js').generate_with_masks();
     var s=require('../sudoku/sudoku_solver.js').solve(puzzle[0]);
     var hints=puzzle[0].split('').map((c)=>{return c=='-'?0:1}).reduce((l,r)=>{return l+r},0);
     send_to_printer('\nPUZZLE:\n'+print_2d(puzzle[0])+'\n\nSOLUTION:\n'+print_2d(puzzle[1])+'\nRATING: '+s.stats.dig_needed+'.'+hints+'\n\n');
   }
-
-
 }
 
 function say(msg) {
