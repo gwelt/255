@@ -2,7 +2,7 @@ const webSocket = require('./255_ws_module').startWebsocket('BOX',(msg,callback)
 function messagehandler(data,no_say) {
   message(data);
   if (/--status/i.test(data)) {say('DRUCKER:'+printer_is+' LICHT:'+light_is+' BEEP:'+beep_is)}
-  if (/--help/i.test(data)) {say('help: drucker an/aus | licht an/aus | bssid | essid | beep [count] | beep an/aus | sudoku | shplst [id]')}
+  if (/--help/i.test(data)) {say('help: drucker an/aus | licht an/aus | bssid | essid | beep [count] | beep an/aus | sudoku | shplst [id] | liga [bl1|bl2] [tabelle|spiele|all|update]')}
   if (/drucker\ an/i.test(data)) {printer_is='AN';say('          DRUCKER AN '+get_time(1))}
   if (/drucker\ aus/i.test(data)) {printer_is='AUS';say('          DRUCKER AUS'+get_time(1))}
   if (/licht\ an/i.test(data)) {require('child_process').execSync(__dirname+'/sendElro -i 1 -u 23 -r 15 -t');say('          LICHT AN   '+get_time(1));light_is="AN"}
@@ -12,13 +12,14 @@ function messagehandler(data,no_say) {
   let b=(/beep\ (\d)$/i.exec(data)); if (b) {if (beep_is!='AUS') {beep(b[1],20,100)}};
   if (/beep\ an/i.test(data)) {beep_is='AN';  say('           BEEP AN   '+get_time(1))}
   if (/beep\ aus/i.test(data)) {beep_is='AUS';say('           BEEP AUS  '+get_time(1))}
-  let shplst=(/shplst\ ([^\ ]*)$/i.exec(data)); if (shplst) {say('PRINTING SHOPPINGLIST');get_shplst('shp.gwelt.net',shplst[1],'LIDL',send_to_printer)}
+  let shplst=(/^shplst\ ([^\ ]*)$/i.exec(data)); if (shplst) {say('PRINTING SHOPPINGLIST');get_shplst('shp.gwelt.net',shplst[1],'LIDL',send_to_printer)}
+  let liga=(/^liga\ ([^\ ]*)\ ([^\ ]*)$/i.exec(data)); if (liga) {say('PRINTING LIGA');get_liga('00000101.de','3004','/'+liga[1]+'/'+liga[2],send_to_printer)}
   if (/sudoku/i.test(data)) {
     say('PRINTING SUDOKU');
     var puzzle=require('../sudoku/sudoku_generator.js').generate_with_masks();
     var s=require('../sudoku/sudoku_solver.js').solve(puzzle[0]);
     var hints=puzzle[0].split('').map((c)=>{return c=='-'?0:1}).reduce((l,r)=>{return l+r},0);
-    send_to_printer('\nPUZZLE:\n'+print_2d(puzzle[0])+'\n\nSOLUTION:\n'+print_2d(puzzle[1])+'\nRATING: '+s.stats.dig_needed+'.'+hints+'\n\n');
+    send_to_printer('\n    PUZZLE:\n'+print_2d(puzzle[0])+'\n\n    SOLUTION:\n'+print_2d(puzzle[1])+'\n    RATING: '+s.stats.dig_needed+'.'+hints+'\n\n');
   }
 }
 
@@ -34,7 +35,7 @@ const baudrate="9600";
 const path = require('path');
 var lcd = "";
 var printer_is='AN';
-var beep_is='AN';
+var beep_is='AUS';
 var light_is='?';
 
 lcd=require('child_process').fork(path.join(__dirname, 'LCD.js'));
@@ -72,7 +73,15 @@ function get_shplst(host,id,shop,callback) {
     var res="";
     r.on('data', function(d) {res+=d}); 
     r.on('end', function() {callback(res)});
-  }).on('error',(e)=>{setTimeout(function(){process.exit()},60000)})
+  }).on('error',(e)=>{say('PRINTING SHPLST FAILED');console.log(e)})
+}
+
+function get_liga(host,port,request,callback) {
+  require('http').get({host:host, port:port, path:request}, function(r) {
+    var res="";
+    r.on('data', function(d) {res+=d}); 
+    r.on('end', function() {callback(res)});
+  }).on('error',(e)=>{say('PRINTING LIGA FAILED');console.log(e)})
 }
 
 function send_to_printer(msg) {
@@ -81,7 +90,7 @@ function send_to_printer(msg) {
   msg=msg.replace(/[äüöÄÜÖß]/g,function(m){return mapUmlaute[m]}).toUpperCase();
   var res="";
   var items = msg.split('\n');
-  items.forEach( (i) => {var x=/###\ ([^\n]*)/.exec(i); if (x) {var c=(32-5-x[1].length); i+=' '; for (let y=0;y<c;y++) {i+='#'}; res+=i+'\n'} else {res+='    '+i+'\n'}});
+  items.forEach( (i) => {var x=/###\ ([^\n]*)/.exec(i); if (x) {var c=(32-5-x[1].length); i+=' '; for (let y=0;y<c;y++) {i+='#'}; res+=i+'\n'} else {res+=i+'\n'}});
   var p=require('child_process');
   p.execSync('stty -F '+printer+' '+baudrate);
   p.execSync('echo "'+res+'" > '+printer,'e');
@@ -91,7 +100,7 @@ function print_2d(puzzle) {
   var res = '';
   for (var row = 0; row < 9; row++) {
     for (var col = 0; col < 9; col++) {
-      res += [""," "," ","  "," "," ","  "," "," "][col];
+      res += ["    "," "," ","  "," "," ","  "," "," "][col];
       if (['1','2','3','4','5','6','7','8','9'].indexOf(puzzle[row*9+col])>=0) {res += puzzle[row*9+col]} else {res+= '_'}
     }
     res += ['\n','\n','\n\n','\n','\n','\n\n','\n','\n','\n'][row];
