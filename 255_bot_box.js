@@ -13,7 +13,7 @@ function messagehandler(data,no_say) {
   if (/beep\ an/i.test(data)) {beep_is='AN';  say('           BEEP AN   '+get_time(1))}
   if (/beep\ aus/i.test(data)) {beep_is='AUS';say('           BEEP AUS  '+get_time(1))}
   let shplst=(/^shplst\ ([^\ ]*)$/i.exec(data)); if (shplst) {say('PRINTING SHOPPINGLIST');get_shplst('shp.gwelt.net',shplst[1],'LIDL',send_to_printer)}
-  let liga_all=(/^liga\ ([^\ ]*)$/i.exec(data)); if (liga_all) {say('PRINTING LIGA');get_liga('00000101.de','3004','/'+liga[1],send_to_printer)}
+  let liga_all=(/^liga\ ([^\ ]*)$/i.exec(data)); if (liga_all) {say('PRINTING LIGA');get_liga('00000101.de','3004','/'+liga_all[1],send_to_printer)}
   let liga=(/^liga\ ([^\ ]*)\ ([^\ ]*)$/i.exec(data)); if (liga) {say('PRINTING LIGA');get_liga('00000101.de','3004','/'+liga[1]+'/'+liga[2],send_to_printer)}
   if (/sudoku/i.test(data)) {
     say('PRINTING SUDOKU');
