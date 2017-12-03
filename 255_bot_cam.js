@@ -1,4 +1,4 @@
-var global_say;
+var global_say=()=>{};
 const webSocket = require('./255_ws_module').startWebsocket('cam',(msg,callback)=>{global_say=callback;messagehandler(msg,callback)});
 function messagehandler(data,say) {
   if (/--status/i.test(data)) {say('online')}
@@ -42,7 +42,7 @@ require('http').createServer(function (req, resp) {
 var cam_addr=require('./config.json').cam_addr;
 
 function get_cam_image(resp,ip,timeout) {
-  global_say('snapshot '+ip);
+  global_say('click '+ip);
   setTimeout(()=>{
     require('request').get('http://'+cam_addr+'/mjpeg/snap.cgi?chn=0', {'auth': {'user': 'admin','pass': '123456','sendImmediately': false}}).pipe(resp)
   },timeout)
@@ -66,7 +66,7 @@ function ir(status) {
 
 function sync_time() {
   Date.prototype.addHours= function(h){this.setHours(this.getHours()+h); return this;}
-  var date=new Date().addHours(2);
+  var date=new Date().addHours(1);
   var year=date.getFullYear();
   var month=date.getMonth()+1;month=(month<10?"0":"")+month;
   var dayofmonth=date.getDate();dayofmonth=(dayofmonth<10?"0":"")+dayofmonth;

@@ -13,10 +13,16 @@ function messagehandler(data,no_say) {
   if (/beep\ an/i.test(data)) {beep_is='AN';  say('           BEEP AN   '+get_time(1))}
   if (/beep\ aus/i.test(data)) {beep_is='AUS';say('           BEEP AUS  '+get_time(1))}
   let shplst=(/^shplst\ ([^\ ]*)$/i.exec(data)); if (shplst) {say('PRINTING SHOPPINGLIST');get_shplst('shp.gwelt.net',shplst[1],'LIDL',send_to_printer)}
-  let liga_all=(/^liga\ ([^\ ]*)$/i.exec(data)); if (liga_all) {say('PRINTING LIGA ALL');get_liga('00000101.de','3004','/'+liga_all[1]+'/print',send_to_printer)}
+  let liga_all=(/^liga\ ([^\ ]*)$/i.exec(data)); if (liga_all) {
+  	say('OK LIGA '+liga_all[1]);
+  	get_liga('00000101.de','3004','/'+liga_all[1]+'/check',(msg)=>{
+  		send_to_printer(msg);
+	  	get_liga('00000101.de','3004','/'+liga_all[1]+'/print',(msg)=>{send_to_printer(msg)});
+  	});
+  }
   let liga=(/^liga\ ([^\ ]*)\ ([^\ ]*)$/i.exec(data)); if (liga) {
-    if ((liga[2]=='check')||(liga[2]=='update')) {say('LIGA '+liga[2].toUpperCase());get_liga('00000101.de','3004','/'+liga[1]+'/'+liga[2],send_to_printer)}
-    else {say('PRINTING LIGA');get_liga('00000101.de','3004','/'+liga[1]+'/print/'+liga[2],send_to_printer)}
+    if ((liga[2]=='check')||(liga[2]=='update')) {say('OK LIGA '+liga[1]+' '+liga[2].toUpperCase());get_liga('00000101.de','3004','/'+liga[1]+'/'+liga[2],send_to_printer)}
+    else {say('OK LIGA '+liga[1]+' PRINT');get_liga('00000101.de','3004','/'+liga[1]+'/print/'+liga[2],send_to_printer)}
   }
   if (/sudoku/i.test(data)) {
     say('PRINTING SUDOKU');
@@ -36,21 +42,21 @@ var config = require('./config.json');
 const interface="wlan0";
 const printer="/dev/ttyS0";
 const baudrate="9600";
-const path = require('path');
-var lcd = "";
 var printer_is='AN';
 var beep_is='AUS';
 var light_is='?';
 
-lcd=require('child_process').fork(path.join(__dirname, 'LCD.js'));
-lcd.send('READY.');
+const path = require('path');
+var lcd = require('child_process').fork(path.join(__dirname, 'LCD.js'));
+//lcd.send('READY.');
+
 p=require('child_process');
 p.execSync('stty -F '+printer+' '+baudrate);
-var welcome="================================\\nIP: "+require('os').networkInterfaces()[interface][0]['address']+" ("+interface+")\\nConnect @"+config.websocket_url+"\\n================================"; //\\nPrinter: "+printer+" @"+baudrate+" baud
-p.execSync('echo "'+welcome+'" > '+printer,'e');
+//var welcome="================================\\nIP: "+require('os').networkInterfaces()[interface][0]['address']+" ("+interface+")\\nConnect @"+config.websocket_url+"\\n================================"; //\\nPrinter: "+printer+" @"+baudrate+" baud
+//p.execSync('echo "'+welcome+'" > '+printer,'e');
 
 Date.prototype.addHours= function(h){this.setHours(this.getHours()+h); return this;}
-function get_time(long) {var date=new Date().addHours(2);var hour=date.getHours();hour=(hour<10?"0":"")+hour;var min=date.getMinutes();min=(min<10?"0":"")+min;return hour+((long)?":":"")+min;}
+function get_time(long) {var date=new Date().addHours(1);var hour=date.getHours();hour=(hour<10?"0":"")+hour;var min=date.getMinutes();min=(min<10?"0":"")+min;return hour+((long)?":":"")+min;}
 function message(msg) {
   var mapUmlaute = {ä:"ae",ü:"ue",ö:"oe",Ä:"Ae",Ü:"Ue",Ö:"Oe",ß:"ss"};
   msg=msg.replace(/[äüöÄÜÖß]/g,function(m){return mapUmlaute[m]});
