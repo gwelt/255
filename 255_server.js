@@ -21,7 +21,7 @@ wss.on('connection', (ws) => {
       if (/^\/nick\ /i.test(msg)) {var n=/^\/nick\ (.*)/i.exec(msg); ws.name=safe_text(n[1]); ws.send('Welcome, '+ws.name+'.');}
       if (/^\/repeat/i.test(msg)) {ws.send(latest_message)}
       if (/^\/credit$/i.test(msg)) {credit=99;ws.send('Credit: '+credit)}
-      if (/^\/getip$/i.test(msg)) {ws.send('your ip is '+ws._socket.remoteAddress.replace(/^.*:/, ''))}
+      if (/^\/getip$/i.test(msg)) {ws.send(ws._socket.remoteAddress.replace(/^.*:/, ''))}
       if (/^\/restart$/i.test(msg)) {ws.send('Ok. Restarting.');setTimeout(function(){process.exit()},3000)}
     } 
     else if (msg) {broadcast(auth+msg)}
