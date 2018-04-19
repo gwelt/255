@@ -1,16 +1,17 @@
 'use strict';
 const express = require('express');
 const SocketServer = require('ws').Server;
+var localip="";
 const server = express()
   .get('/m/:m', function(req, res) {broadcast(req.params.m);res.send('')})
-  .get('/api/localip', function(req, res) {res.send(localip)})
+  .get('/api/setlocalip', function(req, res) {var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress; localip=ip.replace(/^.*:/, ''); res.send(localip);})
+  .get('/api/getlocalip', function(req, res) {res.send(localip)})
   .get('/api/golocalip', function(req, res) {res.send('<HTML><HEAD><META HTTP-EQUIV="refresh" CONTENT="0;URL=http://'+localip+':8080"></HEAD></HTML>')})
   .get('/', function(req, res) {res.sendFile(require('path').join(__dirname,'255_client_simple.html'))})
   .get('*', function(req, res) {res.send('404')})
   .listen(3000);
 const wss = new SocketServer({ server });
 var latest_message="JUST STARTED.";
-var localip="";
 wss.on('connection', (ws) => {
   ws.send('WELCOME #'+wss.clients.length+' ('+credit+')');
   ws.on('message', (msg) => {
