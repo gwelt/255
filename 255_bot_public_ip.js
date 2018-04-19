@@ -6,14 +6,12 @@ function messagehandler(data,say) {
 }
 
 var config = require('./config.json');
-var get_or_set="?set";
-//get_or_set=(require('os').networkInterfaces()['wlan0'][0]['address']=="192.168.1.103")?"?set":"?get";
 var current_ip="";
 check_ip();
 setInterval(function(){check_ip()},15*60000);
 
 function check_ip() {
-  require('http').get({host:config.publicIPserver_url, path:get_or_set}, function(r) {
+  require('http').get({host:config.publicIPserver_url, port:3000, path:'/api/setlocalip'}, function(r) {
     var res=""; 
     r.on('data', function(d) {res+=d}); 
     r.on('end', function() {if (current_ip!=res) {if (current_ip!="") {}; current_ip=res;}});
