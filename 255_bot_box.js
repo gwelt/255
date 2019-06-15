@@ -60,7 +60,8 @@ p.execSync('stty -F '+printer+' '+baudrate);
 //p.execSync('echo "'+welcome+'" > '+printer,'e');
 
 Date.prototype.addHours= function(h){this.setHours(this.getHours()+h); return this;}
-function get_time(long) {var date=new Date().addHours(1);var hour=date.getHours();hour=(hour<10?"0":"")+hour;var min=date.getMinutes();min=(min<10?"0":"")+min;return hour+((long)?":":"")+min;}
+//winter: addHours(1), summer: addHours(2)
+function get_time(long) {var date=new Date().addHours(2);var hour=date.getHours();hour=(hour<10?"0":"")+hour;var min=date.getMinutes();min=(min<10?"0":"")+min;return hour+((long)?":":"")+min;}
 function message(msg) {
   var mapUmlaute = {ä:"ae",ü:"ue",ö:"oe",Ä:"Ae",Ü:"Ue",Ö:"Oe",ß:"ss"};
   msg=msg.replace(/[äüöÄÜÖß]/g,function(m){return mapUmlaute[m]});
@@ -83,7 +84,7 @@ function beep(times,duration,delay) {
 }
 
 function get_shplst(host,id,shop,callback) {
-  require('http').get({host:host, path:'?mode=escapedText&id='+id+'&shop='+shop}, function(r) {
+  require('http').get({host:host, path:'/?mode=escapedText&id='+id+'&shop='+shop}, function(r) {
     var res="";
     r.on('data', function(d) {res+=d}); 
     r.on('end', function() {callback(res)});

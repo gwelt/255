@@ -66,7 +66,7 @@ function ir(status) {
 
 function sync_time() {
   Date.prototype.addHours= function(h){this.setHours(this.getHours()+h); return this;}
-  var date=new Date().addHours(1);
+  var date=new Date().addHours(2); // 2 = summertime
   var year=date.getFullYear();
   var month=date.getMonth()+1;month=(month<10?"0":"")+month;
   var dayofmonth=date.getDate();dayofmonth=(dayofmonth<10?"0":"")+dayofmonth;
