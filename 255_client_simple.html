@@ -19,7 +19,7 @@
   <form action=javascript:void(0); onsubmit=send_message(document.getElementById('message').value)><input id='message' autocomplete='off' type='text'></form>
 
   <script>
-  var hostname_port=location.hostname+":3000";
+  var hostname_port=location.hostname+"/255"; //+":3000";
   var ws=ws_open("ws://"+hostname_port);
   var reconnects=3;
   function ws_open(url) {
