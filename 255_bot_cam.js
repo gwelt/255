@@ -1,5 +1,5 @@
 var global_say=()=>{};
-const webSocket = require('./255_ws_module').startWebsocket('cam',(msg,callback)=>{global_say=callback;messagehandler(msg,callback)});
+const socket = require('./255_socket_client_module').startSocket('cam',(msg,callback)=>{global_say=callback;messagehandler(msg,callback)});
 function messagehandler(data,say) {
   if (/--status/i.test(data)) {say('online')}
   if (/--help/i.test(data)) {say('help: cammove [left|right|up|down] | campreset [pos] | camir [on|off] | camsynctime | camtimestamp [on|off]')}

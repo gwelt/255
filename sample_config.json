@@ -1,11 +1,11 @@
 {
-  "websocket_url" : "ws://localhost:3000",
-  "websocket_ping_delay" : 60000,
-  "publicIPserver_url" : "local.localhost",
+  "socket_server" : "localhost",
+  "socket_server_port" : 3000,
   "twitter_consumer_key" : "",
   "twitter_consumer_secret" : "",
   "twitter_access_token_key" : "",
   "twitter_access_token_secret" : "",
-  "twitter_follow" : "20577168",
-  "twitter_all" : "@tagesschau_eil => 20577168"
+  "twitter_follow" : "20577168,3197921",
+  "twitter_all" : "@tagesschau_eil => 20577168, @heiseonline => 3197921",
+  "cam_addr" : ""
 }

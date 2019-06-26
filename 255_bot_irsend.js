@@ -1,4 +1,5 @@
-const webSocket = require('./255_ws_module').startWebsocket('IRbot',(msg,callback)=>messagehandler(msg,callback));
+var global_say=()=>{};
+const socket = require('./255_socket_client_module').startSocket('IRbot',(msg,callback)=>{global_say=callback;messagehandler(msg,callback)});
 function messagehandler(data,say) {
   if (/--status/i.test(data)) {say('at your service')}
   if (/--help/i.test(data)) {say('help: irsend disco/ice up/stop/down/1/2/3/4/5')}

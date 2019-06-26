@@ -1,4 +1,5 @@
-const webSocket = require('./255_ws_module').startWebsocket('Twitter',(msg,callback)=>messagehandler(msg,callback));
+var global_say=()=>{};
+const socket = require('./255_socket_client_module').startSocket('Twitter',(msg,callback)=>{global_say=callback;messagehandler(msg,callback)});
 function messagehandler(data,say) {
   if (/--status/i.test(data)) {say('listening')}
   if (/--help/i.test(data)) {say('help: lt [screen_name] [count]')}
@@ -17,7 +18,7 @@ var client = new Twitter({
 client.stream('statuses/filter', {follow: config.twitter_follow}, function(stream) {
   stream.on('data', function(event) {
     if ((event.text)&&(!event.text.startsWith('RT'))&&(!event.text.startsWith('@'))) {
-      webSocket.say('@'+event.user.screen_name+': '+event.text);
+      global_say('@'+event.user.screen_name+': '+event.text);
     }
   });
 });
@@ -30,7 +31,7 @@ function latest_tweet(_screen_name,_count) {
         //var hashtags=[];
         //item.entities.hashtags.forEach( (item,index) => {hashtags.push(item.text)});
         //console.log(item.created_at+': '+item.text)//+' ---> '+hashtags.toString())
-        webSocket.say('@'+_screen_name+': '+item.text);
+        global_say('@'+_screen_name+': '+item.text);
       }
     });
   }

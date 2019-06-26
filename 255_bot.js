@@ -1,4 +1,5 @@
-const webSocket = require('./255_ws_module').startWebsocket('Robot',(msg,callback)=>messagehandler(msg,callback));
+var global_say=()=>{};
+const socket = require('./255_socket_client_module').startSocket('Robot',(msg,callback)=>{global_say=callback;messagehandler(msg,callback)});
 function messagehandler(data,say) {
   if (/--help/i.test(data)) {say('help: Hi | time | fortune | ping | ping off')}
   if (/--status/i.test(data)) {say('at your service')}

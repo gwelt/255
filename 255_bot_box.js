@@ -1,4 +1,5 @@
-const webSocket = require('./255_ws_module').startWebsocket('BOX',(msg,callback)=>messagehandler(msg,callback));
+var global_say=()=>{};
+const socket = require('./255_socket_client_module').startSocket('BOX',(msg,callback)=>{global_say=callback;messagehandler(msg,callback)});
 function messagehandler(data,no_say) {
   message(data);
   if (/--status/i.test(data)) {say('DRUCKER:'+printer_is+' LICHT:'+light_is+' BEEP:'+beep_is)}
@@ -38,7 +39,7 @@ function messagehandler(data,no_say) {
 }
 
 function say(msg) {
-  webSocket.say(msg);
+  global_say(msg);
   message('(BOX) '+msg);
 }
 

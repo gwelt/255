@@ -19,27 +19,32 @@
   <form action=javascript:void(0); onsubmit=send_message(document.getElementById('message').value)><input id='message' autocomplete='off' type='text'></form>
 
   <script>
-  var hostname_port=location.hostname+"/255"; //+":3000";
-  var ws=ws_open("ws://"+hostname_port);
-  var reconnects=3;
-  function ws_open(url) {
-    ws=new WebSocket(url);
-    ws.onmessage = function (message) {tweet('tweet',message.data)};
-    ws.onerror = function(e) {console.log(e);tweet('tweet','CONNECTION ERROR ['+e.currentTarget.url+']')};
-    ws.onclose = function(user) {console.log(user);tweet('tweet','CONNECTION CLOSED');ws=0;if (--reconnects>0) {
-      tweet('tweet','TRYING TO RECONNECT...');setTimeout(function(){ws=ws_open("ws://"+hostname_port)},3000);
-    }};
-    setInterval(function(){ws.send('')},60000); // send empty message every minute to stay connected
-    document.getElementById('message').focus();
-    return ws;
+  var socket=false;
+  var useSocketIO=true;
+
+  function loadScript(src, done) {
+    var js = document.createElement('script');
+    js.src = src;
+    js.onload = function() {done(src+' executed')};
+    document.head.appendChild(js);
   }
+
+  if (useSocketIO) {setTimeout(function(){SocketIO()},0)};
+  function SocketIO() {if (!socket) {loadScript('/socket.io/socket.io.js', function() {
+    socket=io();
+    socket.on('message', function (msg) {tweet('tweet',msg)});
+    socket.on('disconnect', function (msg) {tweet('tweet','CONNECTION CLOSED')})
+    document.getElementById('message').focus();
+  })}};
+
   function send_message(m) {
     if (m) {
-      if (ws) {ws.send(m)} 
-      else {var req = new XMLHttpRequest(); req.open('GET','http://'+hostname_port+'/m/'+m); req.send(); alert('Message delivered.')}
-      document.getElementById('message').value=""; document.getElementById('message').focus();
+      if (socket) {socket.emit('message',m)} 
+      else {var req = new XMLHttpRequest(); var hostname_port=location.hostname+":3000/255"; req.open('GET','http://'+hostname_port+'/m/'+m); req.send(); alert('Message delivered.')}
+	  document.getElementById('message').value=""; document.getElementById('message').focus();
     }
   }
+  
   function tweet(ul_element,msg) {
     var node = document.createElement("LI");
     var textnode = document.createTextNode(msg);
@@ -47,6 +52,7 @@
     document.getElementById(ul_element).appendChild(node);
     window.scrollTo(0,document.body.scrollHeight);
   }
+  
   </script>
 
 </body>
