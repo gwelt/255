@@ -17,17 +17,17 @@ function messagehandler(data,no_say) {
   let b=(/beep\ (\d)$/i.exec(data)); if (b) {if (beep_is!='AUS') {beep(b[1],20,100)}};
   if (/beep\ an/i.test(data)) {beep_is='AN';  say('           BEEP AN   '+get_time(1))}
   if (/beep\ aus/i.test(data)) {beep_is='AUS';say('           BEEP AUS  '+get_time(1))}
-  let shplst=(/^shplst\ ([^\ ]*)$/i.exec(data)); if (shplst) {say('PRINTING SHOPPINGLIST');get_shplst('shp.gwelt.net',shplst[1],'LIDL',send_to_printer)}
+  let shplst=(/^shplst\ ([^\ ]*)$/i.exec(data)); if (shplst) {say('PRINTING SHOPPINGLIST');get_shplst(shplst[1],'LIDL',send_to_printer)}
   let liga_all=(/^liga\ ([^\ ]*)$/i.exec(data)); if (liga_all) {
   	say('OK LIGA '+liga_all[1]);
-  	get_liga('00000101.de','3004','/'+liga_all[1]+'/check',(msg)=>{
+  	get_liga(liga_all[1]+'/check',(msg)=>{
   		send_to_printer(msg);
-	  	get_liga('00000101.de','3004','/'+liga_all[1]+'/print',(msg)=>{send_to_printer(msg)});
+	  	get_liga(liga_all[1]+'/print',(msg)=>{send_to_printer(msg)});
   	});
   }
   let liga=(/^liga\ ([^\ ]*)\ ([^\ ]*)$/i.exec(data)); if (liga) {
-    if ((liga[2]=='check')||(liga[2]=='update')) {say('OK LIGA '+liga[1]+' '+liga[2].toUpperCase());get_liga('00000101.de','3004','/'+liga[1]+'/'+liga[2],send_to_printer)}
-    else {say('OK LIGA '+liga[1]+' PRINT');get_liga('00000101.de','3004','/'+liga[1]+'/print/'+liga[2],send_to_printer)}
+    if ((liga[2]=='check')||(liga[2]=='update')) {say('OK LIGA '+liga[1]+' '+liga[2].toUpperCase());get_liga(liga[1]+'/'+liga[2],send_to_printer)}
+    else {say('OK LIGA '+liga[1]+' PRINT');get_liga(liga[1]+'/print/'+liga[2],send_to_printer)}
   }
   if (/sudoku/i.test(data)) {
     say('PRINTING SUDOKU');
@@ -84,16 +84,16 @@ function beep(times,duration,delay) {
   }
 }
 
-function get_shplst(host,id,shop,callback) {
-  require('http').get({host:host, path:'/?mode=escapedText&id='+id+'&shop='+shop}, function(r) {
+function get_shplst(id,shop,callback) {
+  require('https').get({host:'gwelt.net', path:'/shp/?mode=escapedText&id='+id+'&shop='+shop}, function(r) {
     var res="";
     r.on('data', function(d) {res+=d}); 
     r.on('end', function() {callback(res)});
   }).on('error',(e)=>{say('PRINTING SHPLST FAILED');console.log(e)})
 }
 
-function get_liga(host,port,request,callback) {
-  require('http').get({host:host, port:port, path:request}, function(r) {
+function get_liga(request,callback) {
+  require('https').get({host:'gwelt.net', path:'/liga/'+request}, function(r) {
     var res="";
     r.on('data', function(d) {res+=d}); 
     r.on('end', function() {callback(res)});
