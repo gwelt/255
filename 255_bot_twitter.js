@@ -21,6 +21,12 @@ client.stream('statuses/filter', {follow: config.twitter_follow}, function(strea
       global_say('@'+event.user.screen_name+': '+event.text);
     }
   });
+  stream.on('error', function(error) {
+    global_say('ERROR '+error);
+  });
+  stream.on('end', function(reason) {
+    global_say('END '+reason);
+  });
 });
 
 function latest_tweet(_screen_name,_count) {
