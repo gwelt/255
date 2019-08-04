@@ -15,19 +15,25 @@ var client = new Twitter({
   access_token_secret: config.twitter_access_token_secret
 });
 
-client.stream('statuses/filter', {follow: config.twitter_follow}, function(stream) {
+var stream = false;
+function start_streaming(delay) {
+  global_say('CONNECTING STREAM '+delay);
+  stream = client.stream('statuses/filter', {follow: config.twitter_follow});
   stream.on('data', function(event) {
+    delay = 2;
     if ((event.text)&&(!event.text.startsWith('RT'))&&(!event.text.startsWith('@'))) {
       global_say('@'+event.user.screen_name+': '+event.text);
     }
   });
   stream.on('error', function(error) {
-    global_say('ERROR '+error);
+    global_say('ERROR '+JSON.stringify(error));
   });
   stream.on('end', function(reason) {
-    global_say('END '+reason);
+    global_say('END '+JSON.stringify(reason));
+    setTimeout(()=>{start_streaming(delay*delay)},delay*1000);
   });
-});
+}
+setTimeout(()=>{start_streaming(2)},2500);
 
 function latest_tweet(_screen_name,_count) {
   client.get('statuses/user_timeline', {screen_name: _screen_name, count:_count*3, include_rts:false, trim_user:true}, function(error, tweets, response) {
