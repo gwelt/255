@@ -19,14 +19,18 @@ var stream = false;
 function start_streaming(delay) {
   global_say('CONNECTING STREAM '+delay);
   stream = client.stream('statuses/filter', {follow: config.twitter_follow});
+  stream.on('start', function(response) {
+    global_say('START '+JSON.stringify(response));
+  });
   stream.on('data', function(event) {
-    delay = 2;
     if ((event.text)&&(!event.text.startsWith('RT'))&&(!event.text.startsWith('@'))) {
       global_say('@'+event.user.screen_name+': '+event.text);
+      delay = 2;
     }
   });
   stream.on('error', function(error) {
     global_say('ERROR '+JSON.stringify(error));
+    //process.nextTick(() => stream.destroy());
   });
   stream.on('end', function(reason) {
     global_say('END '+JSON.stringify(reason));
