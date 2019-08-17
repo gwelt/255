@@ -17,7 +17,8 @@ var client = new Twitter({
 
 var stream = false;
 function start_streaming(delay) {
-  global_say('CONNECTING STREAM '+delay);
+  setTimeout(()=>{start_streaming(2)},43200000); // reconnect every 12 hours
+  global_say('CONNECTING '+delay);
   stream = client.stream('statuses/filter', {follow: config.twitter_follow});
   stream.on('start', function(response) {
     global_say('START '+JSON.stringify(response));
