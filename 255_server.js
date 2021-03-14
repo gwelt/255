@@ -14,6 +14,7 @@ app.use('/255/api/setpublicip', function(req, res) {var ip = req.headers['x-forw
 app.use('/255/api/getpublicip', function(req, res) {res.send(publicip)})
 app.use('/255/api/local', function(req, res) {res.send('<HTML><HEAD><META HTTP-EQUIV="refresh" CONTENT="0;URL=http://'+publicip+':8080"></HEAD></HTML>')})
 app.use('/255', function(req, res) {res.sendFile(require('path').join(__dirname,'255_client_simple.html'))})
+app.use('/', function(req, res) {res.sendFile(require('path').join(__dirname,'255_client_simple.html'))})
 app.use('*', function(req, res) {res.send('404 255_server')})
 server.listen(config.socket_server_port||3000,()=>{console.log('SERVER STARTED, PORT: '+config.socket_server_port)});
 
