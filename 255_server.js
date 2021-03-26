@@ -1,5 +1,6 @@
 'use strict';
 const express = require('express');
+const bodyParser = require('body-parser');
 const app = express();
 const server = require('http').createServer(app);
 const io = require('socket.io')(server);
@@ -9,12 +10,22 @@ var publicip="";
 var latest_message="JUST STARTED.";
 var credit=99; setInterval(function(){credit=99},60*60000);
 
-app.use('/255/m/:m', function(req, res) {broadcast(req.params.m);res.send('')})
-app.use('/255/api/setpublicip', function(req, res) {var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress; publicip=ip.replace(/^.*:/, ''); res.send(publicip);})
-app.use('/255/api/getpublicip', function(req, res) {res.send(publicip)})
-app.use('/255/api/local', function(req, res) {res.send('<HTML><HEAD><META HTTP-EQUIV="refresh" CONTENT="0;URL=http://'+publicip+':8080"></HEAD></HTML>')})
-app.use('/255', function(req, res) {res.sendFile(require('path').join(__dirname,'255_client_simple.html'))})
-app.use('/', function(req, res) {res.sendFile(require('path').join(__dirname,'255_client_simple.html'))})
+app.use(bodyParser.json({ strict: true }));
+app.use(function (error, req, res, next){next()}); // don't show error-message, if it's not JSON ... just ignore it
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use('(/255)?/m/:m?', function(req, res) {
+  //console.log(req.params.m);
+  if (req.body.m) {
+    broadcast(req.body.m);res.send('ok');
+  } else if (req.params.m) {
+    broadcast(req.params.m);res.send('ok');
+  }
+})
+app.use('(/255)?/api/setpublicip', function(req, res) {var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress; publicip=ip.replace(/^.*:/, ''); res.send(publicip);})
+app.use('(/255)?/api/getpublicip', function(req, res) {res.send(publicip)})
+app.use('(/255)?/api/local', function(req, res) {res.send('<HTML><HEAD><META HTTP-EQUIV="refresh" CONTENT="0;URL=http://'+publicip+':8080"></HEAD></HTML>')})
+app.use('(/255)?', function(req, res) {res.sendFile(require('path').join(__dirname,'255_client_simple.html'))})
+//app.use('/', function(req, res) {res.sendFile(require('path').join(__dirname,'255_client_simple.html'))})
 app.use('*', function(req, res) {res.send('404 255_server')})
 server.listen(config.socket_server_port||3000,()=>{console.log(new Date().toISOString()+' | SERVER STARTED, PORT: '+config.socket_server_port)});
 
