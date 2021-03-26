@@ -3,7 +3,7 @@ exports.startSocket = function (myname,messagehandler) {
 
   const socket = require('socket.io-client')('http://'+config.socket_server+':'+config.socket_server_port||'3000');
 
-  socket.on('connect', function(){console.log(myname+' connected')});
+  socket.on('connect', function(){console.log(new Date().toISOString()+' | '+myname+' connected')});
   socket.on('message', 
     function(data){
       if (!data.startsWith('('+myname+')')) {
