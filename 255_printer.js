@@ -5,7 +5,6 @@ socket.on('connect', function() {
 	console.log(new Date().toISOString()+' | '+socket.id)
 	socket.emit('name','printer');
 	socket.emit('info','messages to #printer will output on this thermal printer (e.g. /m #printer text)');
-	socket.emit('leave','#broadcast');
 	socket.emit('join','#printer');
 });
 
