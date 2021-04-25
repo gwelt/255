@@ -4,7 +4,7 @@ const socket = require('socket.io-client')('http://'+config.socket_server+':'+co
 socket.on('connect', function() {
 	console.log(new Date().toISOString()+' | '+socket.id)
 	socket.emit('name','ping');
-	socket.emit('info','Sending a message to room #ping every 5 seconds.');
+	socket.emit('info','Sending a message to room #ping every 5 seconds. Usage: /m #ping ping');
 	socket.emit('leave','#broadcast');
 	socket.emit('join','#ping');
 });
