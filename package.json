@@ -16,6 +16,7 @@
     "express": "^4.17.1",
     "socket.io": "^4.0.1",
     "socket.io-client": "^4.0.1",
+    "twitter": "^1.7.1",
     "utf-8-validate": "^5.0.4"
   }
 }

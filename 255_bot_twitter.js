@@ -1,14 +1,22 @@
-var global_say=()=>{};
-const socket = require('./255_socket_client_module').startSocket('Twitter',(msg,callback)=>{global_say=callback;messagehandler(msg,callback)});
-function messagehandler(data,say) {
-  if (/twitter-reconnect/i.test(data)) {start_streaming(2);say('reconnecting')}
-  if (/twitter-status/i.test(data)) {say(JSON.stringify(stream))}
-  if (/--status/i.test(data)) {say('listening')}
-  if (/--help/i.test(data)) {say('help: lt [screen_name] [count], twitter-reconnect, twitter-status')}
-  var t=(/lt\ ([\w_]+)\ (\d)$/i.exec(data)); if (t) {latest_tweet(t[1],t[2])}; //post latest tweets
-}
-
 var config = require('./config.json');
+const socket = require('socket.io-client')('http://'+config.socket_server+':'+config.socket_server_port||'3000');
+var global_say=()=>{};
+
+socket.on('connect', function() {
+  console.log(new Date().toISOString()+' | '+socket.id)
+  socket.emit('name','twitter');
+  socket.emit('info','twitter-bot');
+  global_say=(m)=>{socket.emit('message',m)};
+});
+
+socket.on('message', function(msg,meta) {
+  //if (/twitter-reconnect/i.test(msg)) {start_streaming(2);global_say('reconnecting')}
+  //if (/^twitter-status$/i.test(msg)) {global_say(JSON.stringify(stream))}
+  if (/--status/i.test(msg)) {global_say('listening, '+JSON.stringify(stream))}
+  if (/--help/i.test(msg)) {global_say('help: lt [screen_name] [count], twitter-reconnect, twitter-status')}
+  var t=(/lt\ ([\w_]+)\ (\d)$/i.exec(msg)); if (t) {latest_tweet(t[1],t[2])}; //post latest tweets
+});
+
 const Twitter = require('twitter');
 var client = new Twitter({
   consumer_key: config.twitter_consumer_key,
