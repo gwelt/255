@@ -36,6 +36,7 @@ server.listen(config.socket_server_port||3000,()=>{console.log(new Date().toISOS
 io.on('connection', (socket) => {
 	socket.emit('message','WELCOME #'+io.engine.clientsCount+' ('+credit+')');
 	socket.join('#broadcast');
+	socket.data={};
 
 	socket.on('name', (name) => {socket.data.name=safe_text(name); socket.emit('message','Welcome, '+socket.data.name+'.')});
 	socket.on('info', (info) => {socket.data.info=safe_text(info); socket.emit('message','Your info is: '+socket.data.info)});
