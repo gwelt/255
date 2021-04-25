@@ -41,7 +41,9 @@ function start_streaming(delay) {
   stream.on('end', function(reason) {
     global_say('====== END ======');
     //global_say('END '+JSON.stringify(reason));
-    setTimeout(()=>{start_streaming(delay*delay)},delay*1000);
+    if (delay<1000000) {
+      setTimeout(()=>{start_streaming(delay*delay)},delay*1000);
+    } else {global_say('= TWITTER END! =')}
   });
 }
 setTimeout(()=>{start_streaming(2)},2500);
