@@ -14,6 +14,7 @@ socket.on('connect', function() {
 socket.on('message', function(msg,meta) {
 	if (/^--status$/i.test(msg)) {socket.emit('message','listening');}
 	if (meta&&meta.rooms) {
+		if (meta.name) {msg='('+meta.name+') '+msg};
 		if (meta.rooms.includes('#printer')) {ttyS0_print(msg,true)}
 		else if (meta.rooms.includes('#broadcast')) {ttyS0_print(msg)};
 	}
