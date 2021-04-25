@@ -11,7 +11,7 @@ exports.startSocket = function (myname,messagehandler) {
       }
     }
   );
-  socket.on('disconnect', function(e) {setTimeout(function(){ process.exit(); },60000)});
+  //socket.on('disconnect', function(e) {setTimeout(function(){ process.exit(); },60000)});
 
   return socket;
 };

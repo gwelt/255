@@ -1,16 +1,20 @@
-var global_say=()=>{};
-const socket = require('./255_socket_client_module').startSocket('PRINTER',(msg,callback)=>{global_say=callback;messagehandler(msg,callback)});
-function messagehandler(data,no_say) {
-  message(data);
-  if (/--status/i.test(data)) {say('online')}
-}
-
-function say(msg) {
-  global_say(msg);
-  message('(PRINTER) '+msg);
-}
-
 var config = require('./config.json');
+const socket = require('socket.io-client')('http://'+config.socket_server+':'+config.socket_server_port||'3000');
+
+socket.on('connect', function() {
+	console.log(new Date().toISOString()+' | '+socket.id)
+	socket.emit('name','printer');
+	socket.emit('info','messages to #printer will output on this thermal printer (e.g. /m #printer text)');
+	socket.emit('leave','#broadcast');
+	socket.emit('join','#printer');
+});
+
+socket.on('message', function(msg,meta) {
+	if (/--status/i.test(msg)) {socket.emit('message','at your service')}
+	if (/--help/i.test(msg)) {socket.emit('message','help: send to #printer to print on this thermal printer (e.g. /m #printer text)')}
+	message(msg);
+});
+
 const interface="wlan0";
 const printer="/dev/ttyS0";
 const baudrate="9600";
@@ -25,9 +29,9 @@ Date.prototype.addHours= function(h){this.setHours(this.getHours()+h); return th
 function get_time(long) {var date=new Date().addHours(0);var hour=date.getHours();hour=(hour<10?"0":"")+hour;var min=date.getMinutes();min=(min<10?"0":"")+min;return hour+((long)?":":"")+min;}
 
 function message(msg) {
-  var mapUmlaute = {ä:"ae",ü:"ue",ö:"oe",Ä:"Ae",Ü:"Ue",Ö:"Oe",ß:"ss"};
-  msg=msg.replace(/[äüöÄÜÖß]/g,function(m){return mapUmlaute[m]});
-  msg=msg.replace(/\ {2,}/g," ");
-  msg=get_time()+" "+msg;
-  require('child_process').execSync('echo "'+msg+'" > /dev/ttyS0','e');
+	var mapUmlaute = {ä:"ae",ü:"ue",ö:"oe",Ä:"Ae",Ü:"Ue",Ö:"Oe",ß:"ss"};
+	msg=msg.replace(/[äüöÄÜÖß]/g,function(m){return mapUmlaute[m]});
+	msg=msg.replace(/\ {2,}/g," ");
+	msg=get_time()+" "+msg;
+	require('child_process').execSync('echo "'+msg+'" > /dev/ttyS0','e');
 }

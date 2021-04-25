@@ -1,59 +1,83 @@
 <!doctype html>
 <html>
 <head>
-  <meta name=viewport content="width=device-width, initial-scale=1">
-  <title>255</title>
-  <style>
-    * {font:18px Helvetica, Arial; margin:0;padding:0;box-sizing:border-box;}
-    body {}
-    form {padding:3px;position:fixed;bottom:0;width:100%;}
-    form input {border:0;padding:10px;width:100%;}
-    #tweet {list-style-type:none;margin:0;padding:0;}
-    #tweet li {padding:5px 10px;}
-    #tweet li:nth-child(odd) {background:#eee;}
-  </style>
+	<meta name=viewport content="width=device-width, initial-scale=1">
+	<title>255</title>
+	<style>
+		* {font:18px Helvetica, Arial; margin:0;padding:0;box-sizing:border-box;}
+		body {}
+		form {padding:3px;position:fixed;bottom:0;width:100%;}
+		form input {border:0;padding:10px;width:100%;}
+		#tweet {list-style-type:none;margin:0;padding:0;}
+		#tweet li {padding:5px 10px;}
+		#tweet li:nth-child(odd) {background:#eee;}
+		span {padding:0.05rem 0.2rem 0.05rem 0.2rem; margin-right:0.25rem; border-radius:0.2rem; font-size: 0.8rem;}
+		span.name {background-color: #ffcd5b;}
+		span.room {background-color: #b3dfff;}
+	</style>
 </head>
 <body>
 
-  <ul id=tweet></ul><div style=height:50px></div>
-  <form action=javascript:void(0); onsubmit=send_message(document.getElementById('message').value)><input id='message' autocomplete='off' type='text'></form>
+	<ul id=tweet></ul><div style=height:50px></div>
+	<form action=javascript:void(0); onsubmit=send_message(document.getElementById('message').value)><input id='message' autocomplete='off' type='text'></form>
 
-  <script>
-  var socket=false;
-  var useSocketIO=true;
+	<script>
+	var socket=false;
+	var useSocketIO=true;
 
-  function loadScript(src, done) {
-    var js = document.createElement('script');
-    js.src = src;
-    js.onload = function() {done(src+' executed')};
-    document.head.appendChild(js);
-  }
+	function loadScript(src, done) {
+		var js = document.createElement('script');
+		js.src = src;
+		js.onload = function() {done(src+' executed')};
+		document.head.appendChild(js);
+	}
 
-  if (useSocketIO) {setTimeout(function(){SocketIO()},0)};
-  function SocketIO() {if (!socket) {loadScript('/socket.io/socket.io.js', function() {
-    socket=io();
-    socket.on('message', function (msg) {tweet('tweet',msg)});
-    socket.on('disconnect', function (msg) {tweet('tweet','CONNECTION CLOSED')})
-    document.getElementById('message').focus();
-  })}};
+	if (useSocketIO) {setTimeout(function(){SocketIO()},0)};
+	function SocketIO() {if (!socket) {loadScript('/socket.io/socket.io.js', function() {
+		socket=io();
+		socket.on('message', function (msg,meta) {
+			if (meta) {tweet('tweet',msg,(meta&&meta.name)?meta.name:undefined,(meta&&meta.rooms)?meta.rooms:undefined)} else {tweet('tweet',msg)}
+		});
+		socket.on('disconnect', function (msg) {tweet('tweet','CONNECTION CLOSED')})
+		document.getElementById('message').focus();
+	})}};
 
-  function send_message(m) {
-    if (m) {
-      if (socket) {socket.emit('message',m)} 
-      else {var req = new XMLHttpRequest(); var hostname_port=location.hostname+":3000/255"; req.open('GET','http://'+hostname_port+'/m/'+m); req.send(); alert('Message delivered.')}
-	  document.getElementById('message').value=""; document.getElementById('message').focus();
-    }
-  }
-  
-  function tweet(ul_element,msg) {
-    var node = document.createElement("LI");
-    var textnode = document.createTextNode(msg);
-    node.appendChild(textnode);
-    document.getElementById(ul_element).appendChild(node);
-    window.scrollTo(0,document.body.scrollHeight);
-  }
-  
-  </script>
+	function send_message(m) {
+		if (m) {
+			if (socket) {socket.emit('message',m)} 
+			else {var req = new XMLHttpRequest(); var hostname_port=location.hostname+":3000/255"; req.open('GET','http://'+hostname_port+'/m/'+m); req.send(); alert('Message delivered.')}
+			document.getElementById('message').value=""; document.getElementById('message').focus();
+		}
+	}
+	
+	function tweet(ul_element,msg,name,rooms) {
+		var node = document.createElement("LI");
+		
+		if (name!==undefined) {
+			var name_span = document.createElement("SPAN");
+			name_span.classList.add("name");
+			var name_textnode = document.createTextNode(name);
+			name_span.appendChild(name_textnode);
+			node.appendChild(name_span);
+		}
+		
+		if (rooms!==undefined) {
+			rooms.forEach((r)=>{
+				var room_span = document.createElement("SPAN");
+				room_span.classList.add("room");
+				var room_textnode = document.createTextNode(r);
+				room_span.appendChild(room_textnode);
+				node.appendChild(room_span);
+			})
+		}
+
+		var textnode = document.createTextNode(msg);
+		node.appendChild(textnode);
+		document.getElementById(ul_element).appendChild(node);
+		window.scrollTo(0,document.body.scrollHeight);
+	}
+	
+	</script>
 
 </body>
 </html>
