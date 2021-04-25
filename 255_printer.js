@@ -13,19 +13,17 @@ socket.on('connect', function() {
 
 socket.on('message', function(msg,meta) {
 	if (/^--status$/i.test(msg)) {socket.emit('message','listening');}
-	if (meta&&meta.rooms) {
-		if (meta.rooms.includes('#broadcast')) {
-			if (meta.name) {msg='('+meta.name+') '+msg};
-			ttyS0_print(msg)
-		} else if (meta.rooms.includes('#printer')) {ttyS0_print(msg,true)};
+	if (meta&&meta.rooms&&meta.rooms.includes('#broadcast')) {
+		if (meta.name) {msg='('+meta.name+') '+msg};
+		msg=get_time()+' '+msg;
 	}
+	ttyS0_print(msg);
 });
 
-function ttyS0_print(msg,omit_timestamp) {
+function ttyS0_print(msg) {
 	var mapUmlaute = {ä:"ae",ü:"ue",ö:"oe",Ä:"Ae",Ü:"Ue",Ö:"Oe",ß:"ss"};
 	msg=msg.replace(/[äüöÄÜÖß]/g,function(m){return mapUmlaute[m]});
 	msg=msg.replace(/\ {2,}/g," ");
-	if (!omit_timestamp) {msg=get_time()+" "+msg};
 	require('child_process').execSync('echo "'+msg+'" > /dev/ttyS0','e');
 }
 
