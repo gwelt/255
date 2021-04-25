@@ -11,10 +11,8 @@ socket.on('connect', function() {
 
 socket.on('message', function(msg,meta) {
 	if (/^--status$/i.test(msg)) {socket.emit('message','pinging')}
-	//if (/--help/i.test(msg)) {socket.emit('message','help: sends a message to room #ping every 5 seconds')}
-	var d=(/ping$/i.exec(msg)); if (d) {
-		socket.emit('message','Pong to you, '+((meta&&meta.name)?meta.name:'unnamed user')+'.',{rooms:[(meta?meta.sender:undefined)]})
-	};
+	//if (/^--status$/i.test(msg)) {socket.emit('message','pinging',{rooms:[(meta?meta.sender:undefined)]})}
+	if (/^ping$/i.test(msg)) {socket.emit('message','Pong to you, '+((meta&&meta.name)?meta.name:'unnamed user')+'.',{rooms:[(meta?meta.sender:undefined)]})}
 });
 
 setInterval(function(){
