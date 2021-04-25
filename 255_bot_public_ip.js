@@ -1,12 +1,21 @@
-var global_say=()=>{};
-const socket = require('./255_socket_client_module').startSocket('publicIP',(msg,callback)=>{global_say=callback;messagehandler(msg,callback)});
 var config = require('./config.json');
+const socket = require('socket.io-client')('http://'+config.socket_server+':'+config.socket_server_port||'3000');
+var global_say=()=>{};
 var current_ip="";
-function messagehandler(data,say) {
-  if (/--status/i.test(data)) {say(current_ip)}
-  if (/--help/i.test(data)) {say('help: get public ip')}
-  if (/get\ public\ ip/i.test(data)) {say('     '+current_ip)}
-}
+
+socket.on('connect', function() {
+  console.log(new Date().toISOString()+' | '+socket.id)
+  socket.emit('name','publicIP');
+  socket.emit('info','Updating public IP every 15 minutes. Usage: get public ip');
+  global_say=(m)=>{socket.emit('message',m)};
+});
+
+socket.on('message', function(msg,meta) {
+  if (/--status/i.test(msg)) {global_say(current_ip)}
+  if (/--help/i.test(msg)) {global_say('help: get public ip')}
+  if (/get\ public\ ip/i.test(msg)) {global_say('     '+current_ip)}
+});
+
 setTimeout(function(){check_ip()},5000);
 setInterval(function(){check_ip()},15*60000);
 

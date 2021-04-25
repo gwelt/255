@@ -1,49 +1,72 @@
+var config = require('./config.json');
+const socket = require('socket.io-client')('http://'+config.socket_server+':'+config.socket_server_port||'3000');
 var global_say=()=>{};
-const socket = require('./255_socket_client_module').startSocket('BOX',(msg,callback)=>{global_say=callback;messagehandler(msg,callback)});
-function messagehandler(data,no_say) {
-  message(data);
-  if (/--status/i.test(data)) {say('DRUCKER:'+printer_is+' LICHT:'+light_is+' BEEP:'+beep_is)}
-  if (/--help/i.test(data)) {say('help: drucker an/aus | licht an/aus | bssid | essid | beep [count] | beep an/aus | sudoku | shplst [id] | liga [bl1|bl2] [tabelle|spiele|check|update]')}
-  if (/drucker\ an/i.test(data)) {printer_is='AN';say('          DRUCKER AN '+get_time(1))}
-  if (/drucker\ aus/i.test(data)) {printer_is='AUS';say('          DRUCKER AUS'+get_time(1))}
-  if (/licht\ an/i.test(data)) {require('child_process').execSync(__dirname+'/sendElro -i 1 -u 23 -r 15 -t');say('          LICHT AN   '+get_time(1));light_is="AN"}
-  if (/licht\ aus/i.test(data)) {require('child_process').execSync(__dirname+'/sendElro -i 1 -u 23 -r 15 -f');say('          LICHT AUS  '+get_time(1));light_is="AUS"}
-  if (/tv\ an/i.test(data)) {require('child_process').execSync(__dirname+'/sendElro -i 2 -u 23 -r 15 -t');say('          TV AN      '+get_time(1));}
-  if (/tv\ aus/i.test(data)) {require('child_process').execSync(__dirname+'/sendElro -i 2 -u 23 -r 15 -f');say('          TV AUS     '+get_time(1));}
-  if (/baum\ an/i.test(data)) {require('child_process').execSync(__dirname+'/sendElro -i 3 -u 23 -r 15 -t');say('          BAUM AN    '+get_time(1));}
-  if (/baum\ aus/i.test(data)) {require('child_process').execSync(__dirname+'/sendElro -i 3 -u 23 -r 15 -f');say('          BAUM AUS   '+get_time(1));}
-  if (/bssid/i.test(data)) {say(require('child_process').execSync('iwlist wlan0 scanning | grep -o ..:..:..:..:..:..',{stdio:'pipe'}).toString().replace(/[\r\n]/g,' '))}
-  if (/essid/i.test(data)) {say(require('child_process').execSync("iwlist wlan0 scanning | grep ESSID",{stdio:'pipe'}).toString().replace(/\ /g,''))}
-  let b=(/beep\ (\d)$/i.exec(data)); if (b) {if (beep_is!='AUS') {beep(b[1],20,100)}};
-  if (/beep\ an/i.test(data)) {beep_is='AN';  say('           BEEP AN   '+get_time(1))}
-  if (/beep\ aus/i.test(data)) {beep_is='AUS';say('           BEEP AUS  '+get_time(1))}
-  let shplst=(/^shplst\ ([^\ ]*)$/i.exec(data)); if (shplst) {say('PRINTING SHOPPINGLIST');get_shplst(shplst[1],'LIDL',send_to_printer)}
+var current_ip="";
+
+socket.on('connect', function() {
+  console.log(new Date().toISOString()+' | '+socket.id)
+  socket.emit('name','BOX');
+  socket.emit('info','This is the box. Usage: drucker an/aus | licht an/aus | beep an/aus | beep [count] | bssid | essid | sudoku | sudokunew | shplst [id] | liga [bl1|bl2] [tabelle|spiele|check|update]');
+  global_say=(m)=>{socket.emit('message',m)};
+});
+
+socket.on('message', function(data,meta) {
+  print(data);
+  if (/--status/i.test(data)) {global_say('DRUCKER:'+printer_is+' LICHT:'+light_is+' BEEP:'+beep_is)}
+  if (/--help/i.test(data)) {global_say('help: drucker an/aus | licht an/aus | bssid | essid | beep [count] | beep an/aus | sudoku | sudokunew | shplst [id] | liga [bl1|bl2] [tabelle|spiele|check|update]')}
+  if (/^drucker\ an$/i.test(data)) {printer_is='AN';global_say('          DRUCKER AN '+get_time(1))}
+  if (/^drucker\ aus$/i.test(data)) {printer_is='AUS';global_say('          DRUCKER AUS '+get_time(1))}
+  if (/^licht\ an$/i.test(data)) {require('child_process').execSync(__dirname+'/sendElro -i 1 -u 23 -r 15 -t');global_say('          LICHT AN   '+get_time(1));light_is="AN"}
+  if (/^licht\ aus$/i.test(data)) {require('child_process').execSync(__dirname+'/sendElro -i 1 -u 23 -r 15 -f');global_say('          LICHT AUS  '+get_time(1));light_is="AUS"}
+  if (/^tv\ an$/i.test(data)) {require('child_process').execSync(__dirname+'/sendElro -i 2 -u 23 -r 15 -t');global_say('          TV AN      '+get_time(1));}
+  if (/^tv\ aus$/i.test(data)) {require('child_process').execSync(__dirname+'/sendElro -i 2 -u 23 -r 15 -f');global_say('          TV AUS     '+get_time(1));}
+  if (/^baum\ an$/i.test(data)) {require('child_process').execSync(__dirname+'/sendElro -i 3 -u 23 -r 15 -t');global_say('          BAUM AN    '+get_time(1));}
+  if (/^baum\ aus$/i.test(data)) {require('child_process').execSync(__dirname+'/sendElro -i 3 -u 23 -r 15 -f');global_say('          BAUM AUS   '+get_time(1));}
+  if (/^bssid$/i.test(data)) {global_say(require('child_process').execSync('iwlist wlan0 scanning | grep -o ..:..:..:..:..:..',{stdio:'pipe'}).toString().replace(/[\r\n]/g,' '))}
+  if (/^essid$/i.test(data)) {global_say(require('child_process').execSync("iwlist wlan0 scanning | grep ESSID",{stdio:'pipe'}).toString().replace(/\ /g,''))}
+  let b=(/^beep\ (\d)$/i.exec(data)); if (b) {if (beep_is!='AUS') {beep(b[1],20,100)}};
+  if (/^beep\ an$/i.test(data)) {beep_is='AN';  global_say('           BEEP AN   '+get_time(1))}
+  if (/^beep\ aus$/i.test(data)) {beep_is='AUS';global_say('           BEEP AUS  '+get_time(1))}
+  let shplst=(/^shplst\ ([^\ ]*)$/i.exec(data)); if (shplst) {global_say('PRINTING SHOPPINGLIST');get_shplst(shplst[1],'LIDL',send_to_printer)}
   let liga_all=(/^liga\ ([^\ ]*)$/i.exec(data)); if (liga_all) {
-  	say('OK LIGA '+liga_all[1]);
-  	get_liga(liga_all[1]+'/check',(msg)=>{
-  		send_to_printer(msg);
-	  	get_liga(liga_all[1]+'/print',(msg)=>{send_to_printer(msg)});
-  	});
+   	global_say('OK LIGA '+liga_all[1]);
+  	if (liga_all[1]=='bl') {
+ 	  	get_liga('bl1/check',(msg)=>{
+   			send_to_printer(msg);
+ 	  		get_liga('bl1/print',(msg)=>{send_to_printer(msg)});		
+ 		  	get_liga('bl2/check',(msg)=>{
+   				send_to_printer(msg);
+ 		  		get_liga('bl2/print',(msg)=>{send_to_printer(msg)});		
+  	 	 	});
+ 	  	});
+  	} else {
+ 	  	get_liga(liga_all[1]+'/check',(msg)=>{
+   			send_to_printer(msg);
+ 	  		get_liga(liga_all[1]+'/print',(msg)=>{send_to_printer(msg)});
+ 	  	});
+  	}
+    let liga=(/^liga\ ([^\ ]*)\ ([^\ ]*)$/i.exec(data)); if (liga) {
+      if ((liga[2]=='check')||(liga[2]=='update')) {global_say('OK LIGA '+liga[1]+' '+liga[2].toUpperCase());get_liga(liga[1]+'/'+liga[2],send_to_printer)}
+      else {global_say('OK LIGA '+liga[1]+' PRINT');get_liga(liga[1]+'/print/'+liga[2],send_to_printer)}
+    }
   }
-  let liga=(/^liga\ ([^\ ]*)\ ([^\ ]*)$/i.exec(data)); if (liga) {
-    if ((liga[2]=='check')||(liga[2]=='update')) {say('OK LIGA '+liga[1]+' '+liga[2].toUpperCase());get_liga(liga[1]+'/'+liga[2],send_to_printer)}
-    else {say('OK LIGA '+liga[1]+' PRINT');get_liga(liga[1]+'/print/'+liga[2],send_to_printer)}
-  }
-  if (/sudoku/i.test(data)) {
-    say('PRINTING SUDOKU');
+  if (/^sudokunew$/i.test(data)) {
+    global_say('PRINTING NEW SUDOKU');
     var puzzle=require('../sudoku/sudoku_generator.js').generate_with_masks();
     var s=require('../sudoku/sudoku_solver.js').solve(puzzle[0]);
     var hints=puzzle[0].split('').map((c)=>{return c=='-'?0:1}).reduce((l,r)=>{return l+r},0);
     send_to_printer('\n    PUZZLE:\n'+print_2d(puzzle[0])+'\n\n    SOLUTION:\n'+print_2d(puzzle[1])+'\n    RATING: '+s.stats.dig_needed+'.'+hints+'\n\n');
   }
-}
+  if (/^sudoku$/i.test(data)) {
+    global_say('PRINTING SUDOKU');
+    get_sudoku('api/get',(json)=>{
+      let sudoku=JSON.parse(json);
+      //send_to_printer('\n    PUZZLE:\n'+print_2d(sudoku.puzzle)+'\n\n    SOLUTION:\n'+print_2d(sudoku.solution)+'\n\n');
+      send_to_printer('\n    PUZZLE:\n'+print_2d(sudoku.puzzle)+'\n\n    CURRENT:\n'+print_2d(sudoku.current)+'\n\n    SOLUTION:\n'+print_2d(sudoku.solution)+'\n\n');
+    })
+  }
+});
 
-function say(msg) {
-  global_say(msg);
-  message('(BOX) '+msg);
-}
-
-var config = require('./config.json');
 const interface="wlan0";
 const printer="/dev/ttyS0";
 const baudrate="9600";
@@ -62,8 +85,8 @@ p.execSync('stty -F '+printer+' '+baudrate);
 
 Date.prototype.addHours= function(h){this.setHours(this.getHours()+h); return this;}
 //winter: addHours(1), summer: addHours(2)
-function get_time(long) {var date=new Date().addHours(2);var hour=date.getHours();hour=(hour<10?"0":"")+hour;var min=date.getMinutes();min=(min<10?"0":"")+min;return hour+((long)?":":"")+min;}
-function message(msg) {
+function get_time(long) {var date=new Date().addHours(0);var hour=date.getHours();hour=(hour<10?"0":"")+hour;var min=date.getMinutes();min=(min<10?"0":"")+min;return hour+((long)?":":"")+min;}
+function print(msg) {
   var mapUmlaute = {ä:"ae",ü:"ue",ö:"oe",Ä:"Ae",Ü:"Ue",Ö:"Oe",ß:"ss"};
   msg=msg.replace(/[äüöÄÜÖß]/g,function(m){return mapUmlaute[m]});
   lcd.send(msg);
@@ -98,6 +121,14 @@ function get_liga(request,callback) {
     r.on('data', function(d) {res+=d}); 
     r.on('end', function() {callback(res)});
   }).on('error',(e)=>{say('PRINTING LIGA FAILED');console.log(e)})
+}
+
+function get_sudoku(request,callback) {
+  require('https').get({host:'gwelt.net', path:'/sudoku/'+request}, function(r) {
+    var res="";
+    r.on('data', function(d) {res+=d}); 
+    r.on('end', function() {callback(res)});
+  }).on('error',(e)=>{say('PRINTING SUDOKU FAILED');console.log(e)})
 }
 
 function send_to_printer(msg) {
