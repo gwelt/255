@@ -11,9 +11,8 @@ socket.on('connect', function() {
 });
 
 socket.on('message', function(msg,meta) {
-  if (/--status/i.test(msg)) {global_say(current_ip)}
-  if (/--help/i.test(msg)) {global_say('help: get_public_ip')}
-  if (/get\_public\_ip/i.test(msg)) {global_say(current_ip)}
+  if (/^--status$/i.test(msg)) {global_say(current_ip)}
+  if (/^get\_public\_ip$/i.test(msg)) {global_say(current_ip)}
 });
 
 setTimeout(function(){check_ip()},5000);

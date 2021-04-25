@@ -5,15 +5,15 @@ var global_say=()=>{};
 socket.on('connect', function() {
   console.log(new Date().toISOString()+' | '+socket.id)
   socket.emit('name','twitter');
-  socket.emit('info','twitter-bot');
+  socket.emit('info','I am twitter-bot. Usage: lt [screen_name] [count]');
   global_say=(m)=>{socket.emit('message',m)};
 });
 
 socket.on('message', function(msg,meta) {
   //if (/twitter-reconnect/i.test(msg)) {start_streaming(2);global_say('reconnecting')}
   //if (/^twitter-status$/i.test(msg)) {global_say(JSON.stringify(stream))}
-  if (/--status/i.test(msg)) {global_say('listening, '+JSON.stringify(stream))}
-  if (/--help/i.test(msg)) {global_say('help: lt [screen_name] [count], twitter-reconnect, twitter-status')}
+  if (/^--status$/i.test(msg)) {global_say('listening, '+JSON.stringify(stream))}
+  //if (/--help/i.test(msg)) {global_say('help: lt [screen_name] [count], twitter-reconnect, twitter-status')}
   var t=(/lt\ ([\w_]+)\ (\d)$/i.exec(msg)); if (t) {latest_tweet(t[1],t[2])}; //post latest tweets
 });
 

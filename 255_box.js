@@ -14,8 +14,8 @@ socket.on('connect', function() {
 socket.on('message', function(data,meta) {
   //print(data);
   lcd_show(data);
-  if (/--status/i.test(data)) {global_say('DRUCKER:'+printer_is+' LICHT:'+light_is+' BEEP:'+beep_is)}
-  if (/--help/i.test(data)) {global_say('help: drucker an/aus | licht an/aus | bssid | essid | beep [count] | beep an/aus | sudoku | sudokunew | shplst [id] | liga [bl1|bl2] [tabelle|spiele|check|update]')}
+  if (/^--status$/i.test(data)) {global_say('DRUCKER:'+printer_is+' LICHT:'+light_is+' BEEP:'+beep_is)}
+  //if (/^--help$/i.test(data)) {global_say('help: drucker an/aus | licht an/aus | bssid | essid | beep [count] | beep an/aus | sudoku | sudokunew | shplst [id] | liga [bl1|bl2] [tabelle|spiele|check|update]')}
   if (/^drucker\ an$/i.test(data)) {printer_is='AN';global_say('          DRUCKER AN '+get_time(1))}
   if (/^drucker\ aus$/i.test(data)) {printer_is='AUS';global_say('          DRUCKER AUS '+get_time(1))}
   if (/^licht\ an$/i.test(data)) {require('child_process').execSync(__dirname+'/sendElro -i 1 -u 23 -r 15 -t');global_say('          LICHT AN   '+get_time(1));light_is="AN"}

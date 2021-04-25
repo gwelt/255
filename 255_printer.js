@@ -7,11 +7,12 @@ socket.on('connect', function() {
 	console.log(new Date().toISOString()+' | '+socket.id);
 	ttyS0_print(welcome);
 	socket.emit('name','printer');
-	socket.emit('info','messages to #printer will output on this thermal printer (e.g. /m #printer text)');
+	socket.emit('info','Messages to #printer will output on this thermal printer. Usage: /m #printer [text]');
 	socket.emit('join','#printer');
 });
 
 socket.on('message', function(msg,meta) {
+	if (/^--status$/i.test(msg)) {socket.emit('message','listening');}
 	if (meta&&meta.rooms) {
 		if (meta.rooms.includes('#printer')) {ttyS0_print(msg,true)}
 		else if (meta.rooms.includes('#broadcast')) {ttyS0_print(msg)};
