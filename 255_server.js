@@ -29,45 +29,73 @@ app.use('(/255)?/m/:m?', function(req, res) {
 app.use('(/255)?/api/setpublicip', function(req, res) {var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress; publicip=ip.replace(/^.*:/, ''); res.send(publicip);})
 app.use('(/255)?/api/getpublicip', function(req, res) {res.send(publicip)})
 app.use('(/255)?/api/local', function(req, res) {res.send('<HTML><HEAD><META HTTP-EQUIV="refresh" CONTENT="0;URL=http://'+publicip+':8080"></HEAD></HTML>')})
-app.use('(/255)?', function(req, res) {res.sendFile(require('path').join(__dirname,'255_client_simple.html'))})
+app.use('(/255)?', function(req, res) {res.sendFile(require('path').join(__dirname,'client.html'))})
 app.use('*', function(req, res) {res.send('404 255_server')})
 server.listen(config.socket_server_port||3000,()=>{console.log(new Date().toISOString()+' | SERVER STARTED, PORT: '+config.socket_server_port)});
 
+async function fetchSockets(callback) {callback(await io.fetchSockets())}
 io.on('connection', (socket) => {
 	socket.emit('message','WELCOME #'+io.engine.clientsCount+' ('+credit+')');
 	socket.join('#broadcast');
 	socket.data={};
 
-	socket.on('name', (name) => {socket.data.name=safe_text(name); socket.emit('message','Welcome, '+socket.data.name+'.')});
+	socket.on('name', (name) => {socket.data.name=safe_text(name); socket.emit('message','You are now known as '+socket.data.name+'.')});
 	socket.on('info', (info) => {socket.data.info=safe_text(info); socket.emit('message','Your info is: '+socket.data.info)});
 	socket.on('join', (room) => {socket.join(room); socket.emit('message','You are joining '+room+' now.')});
 	socket.on('leave', (room) => {socket.leave(room); socket.emit('message','You left '+room+'.')});
 	socket.on('message', (msg,meta) => {
+		// handle commands
 		if (/^\//i.test(msg)) {
-			if (/^\/help/i.test(msg)) {socket.emit('message','help: /nick [name] | /repeat | /credit | /restart | /users | /join [room] | /leave [room] | /rooms | /m [room] [message]')}
+			if (/^\/help/i.test(msg)) {socket.emit('message','help: /nick [name] | /join [room] | /leave [room] | /rooms | /users | /whois [name] | /m [room] [message] | /repeat | /credit | /restart')}
 			if (/^\/repeat/i.test(msg)) {socket.emit('message',latest_message)}
 			if (/^\/credit$/i.test(msg)) {credit=99;socket.emit('message','Credit: '+credit)}
 			if (/^\/restart$/i.test(msg)) {socket.emit('message','Ok. Restarting.');setTimeout(function(){process.exit()},3000)}
-			let name=(/^\/(name|nick)\ ([^\ ]*)$/i.exec(msg)); if (name) {socket.data.name=safe_text(name[2]); socket.emit('message','Welcome, '+socket.data.name+'.')};
-			let join=(/^\/join\ ([^\ ]*)$/i.exec(msg)); if (join) {socket.join(join[1]); socket.emit('message','You are joining '+join[1]+' now.')};
-			let leave=(/^\/leave\ ([^\ ]*)$/i.exec(msg)); if (leave) {socket.leave(leave[1]); socket.emit('message','You left '+leave[1]+'.')};
-			let message_to_room=(/^\/m\ ([^\ ]*)\ (.*)$/i.exec(msg)); if (message_to_room&&message_to_room[2]) {
-				//io.to(socket.id).to(message_to_room[1]).emit('message',safe_text(message_to_room[2]),{sender:socket.id,name:safe_text(socket.data.name),rooms:[socket.id,safe_text(message_to_room[1])]});
-				io.to(message_to_room[1]).emit('message',safe_text(message_to_room[2]),{sender:socket.id,name:safe_text(socket.data.name),rooms:[safe_text(message_to_room[1])]});
+			let name=(/^\/(name|nick|n)\ ([^\ ]*)$/i.exec(msg)); if (name) {socket.data.name=safe_text(name[2]); socket.emit('message','Welcome, '+socket.data.name+'.')};
+			let join=(/^\/(join|j)\ ([^\ ]*)$/i.exec(msg)); if (join) {socket.join(join[2]); socket.emit('message','You are joining '+join[2]+' now.')};
+			let leave=(/^\/(leave|l)\ ([^\ ]*)$/i.exec(msg)); if (leave) {socket.leave(leave[2]); socket.emit('message','You left '+leave[2]+'.')};
+			let kick=(/^\/(kick|k)\ ([^\ ]*)$/i.exec(msg)); if (kick) {
+				fetchSockets((s)=>{ 
+					let s2=s.find((e)=>{return e.id==kick[2]});
+					if (s2) {
+						socket.emit('message','You kicked user '+kick[2]+'.')
+						s2.emit('message','You got kicked!');
+						// leave all rooms (except his own "private"-room - system will take care)
+						[...socket.rooms].forEach((r)=>{s2.leave(r)});
+						//s2.disconnect(true);
+					}
+				})
 			};
-			if (/^\/rooms$/i.test(msg)) {socket.emit('message','You are joining these rooms: '+JSON.stringify([...socket.rooms]))}
-			async function fetchSockets(callback) {callback(await io.fetchSockets())}
-			if (/^\/users$/i.test(msg)) {fetchSockets((s)=>{ let s2=s.map((e)=>{return {id:e.id,data:e.data,rooms:[...e.rooms].slice(1)}}); socket.emit('message',s2.length+' users online. '+JSON.stringify(s2)) })}
+			let whois=(/^\/(whois|w)\ ([^\ ]*)$/i.exec(msg)); if (whois) {
+				fetchSockets((s)=>{ 
+					let s2=s.filter((e)=>{return e.data.name==whois[2]}).map((e)=>{return {id:e.id,data:e.data,rooms:[...e.rooms].slice(1)}});
+					socket.emit('message',s2.length+' users online with name '+whois[2]+': '+JSON.stringify(s2));
+				})
+			};
+			if (/^\/(rooms|r)$/i.test(msg)) {socket.emit('message','You are joining these rooms: '+JSON.stringify([...socket.rooms]))}
+			if (/^\/(users|u)$/i.test(msg)) {
+				fetchSockets((s)=>{ 
+					let s2=s.map((e)=>{return {id:e.id,data:e.data,rooms:[...e.rooms].slice(1)}}); 
+					socket.emit('message',s2.length+' users online: '+JSON.stringify(s2));
+				})
+			}
+			let message_to_room=(/^\/(message|m)\ ([^\ ]*)\ (.*)$/i.exec(msg)); if (message_to_room&&message_to_room[3]) {
+				io.to(message_to_room[2]).emit('message',safe_text(message_to_room[3]),{sender:socket.id,name:safe_text(socket.data.name),rooms:[safe_text(message_to_room[2])]});
+			};
 		} 
+		// send/forward message to other clients
 		else if (msg&&credit>0) {
-			//io.sockets.emit('message',safe_text(msg),{sender:socket.id,name:safe_text(socket.data.name),rooms:undefined}); // << broadcast to all
+			// if meta.rooms is given, send message to all given rooms
+			// else send message to all rooms the sender is joining (except his own "private"-room (=socket.id))
 			if ((meta&&meta.rooms) && (Array.isArray(meta.rooms)) && (meta.rooms.length>0)) {} else {
 				meta=meta||{};
 				meta.rooms=[...socket.rooms].filter((r)=>{return r!==socket.id});
-			} //['#broadcast']
+			}
 			if (meta.rooms.includes('#broadcast')) {credit--; latest_message=safe_text(msg);};
-			let ioto=io; meta.rooms.forEach((r)=>{ioto=ioto.to(r)})
-			ioto.emit('message',safe_text(msg),{sender:socket.id,name:safe_text(socket.data.name),rooms:meta.rooms});
+			if (meta.rooms.length>0) {
+				let ioto=io; 
+				meta.rooms.forEach((r)=>{ioto=ioto.to(r)});
+				ioto.emit('message',safe_text(msg),{sender:socket.id,name:safe_text(socket.data.name),rooms:meta.rooms});
+			}
 		};
 	});
 });
