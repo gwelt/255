@@ -60,7 +60,7 @@ io.on('connection', (socket) => {
 						socket.emit('message','You kicked user '+kick[2]+'.')
 						s2.emit('message','You got kicked!');
 						// leave all rooms (except his own "private"-room - system will take care)
-						[...socket.rooms].forEach((r)=>{s2.leave(r)});
+						[...s2.rooms].forEach((r)=>{s2.leave(r)});
 						//s2.disconnect(true);
 					}
 				})
