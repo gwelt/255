@@ -33,7 +33,6 @@ app.use('(/255)?', function(req, res) {res.sendFile(require('path').join(__dirna
 app.use('*', function(req, res) {res.send('404 255_server')})
 server.listen(config.socket_server_port||3000,()=>{console.log(new Date().toISOString()+' | SERVER STARTED, PORT: '+config.socket_server_port)});
 
-async function fetchSockets(callback) {callback(await io.fetchSockets())}
 io.on('connection', (socket) => {
 	socket.emit('message','WELCOME #'+io.engine.clientsCount+' ('+credit+')');
 	socket.join('#broadcast');
@@ -50,9 +49,22 @@ io.on('connection', (socket) => {
 			if (/^\/repeat/i.test(msg)) {socket.emit('message',latest_message)}
 			if (/^\/credit$/i.test(msg)) {credit=99;socket.emit('message','Credit: '+credit)}
 			if (/^\/restart$/i.test(msg)) {socket.emit('message','Ok. Restarting.');setTimeout(function(){process.exit()},3000)}
-			let name=(/^\/(name|nick|n)\ ([^\ ]*)$/i.exec(msg)); if (name) {socket.data.name=safe_text(name[2]); socket.emit('message','Welcome, '+socket.data.name+'.')};
+			if (/^\/(rooms|r)$/i.test(msg)) {socket.emit('message','You are joining these rooms: '+JSON.stringify([...socket.rooms]))}
+			if (/^\/(users|u)$/i.test(msg)) {
+				fetchSockets((s)=>{ 
+					let s2=s.map((e)=>{return {id:e.id,data:e.data,rooms:[...e.rooms].slice(1)}}); 
+					socket.emit('message',s2.length+' users online: '+JSON.stringify(s2));
+				})
+			}
+			let name=(/^\/(name|nick|n)\ ([^\ ]*)$/i.exec(msg)); if (name) {socket.data.name=safe_text(name[2]); socket.emit('message','You are now known as '+socket.data.name+'.')};
 			let join=(/^\/(join|j)\ ([^\ ]*)$/i.exec(msg)); if (join) {socket.join(join[2]); socket.emit('message','You are joining '+join[2]+' now.')};
 			let leave=(/^\/(leave|l)\ ([^\ ]*)$/i.exec(msg)); if (leave) {socket.leave(leave[2]); socket.emit('message','You left '+leave[2]+'.')};
+			let whois=(/^\/(whois|w)\ ([^\ ]*)$/i.exec(msg)); if (whois) {
+				fetchSockets((s)=>{ 
+					let s2=s.filter((e)=>{return e.data.name==whois[2]}).map((e)=>{return {id:e.id,data:e.data,rooms:[...e.rooms].slice(1)}});
+					socket.emit('message',s2.length+' users online with name '+whois[2]+': '+JSON.stringify(s2));
+				})
+			};
 			let kick=(/^\/(kick|k)\ ([^\ ]*)$/i.exec(msg)); if (kick) {
 				fetchSockets((s)=>{ 
 					let s2=s.find((e)=>{return e.id==kick[2]});
@@ -65,19 +77,6 @@ io.on('connection', (socket) => {
 					}
 				})
 			};
-			let whois=(/^\/(whois|w)\ ([^\ ]*)$/i.exec(msg)); if (whois) {
-				fetchSockets((s)=>{ 
-					let s2=s.filter((e)=>{return e.data.name==whois[2]}).map((e)=>{return {id:e.id,data:e.data,rooms:[...e.rooms].slice(1)}});
-					socket.emit('message',s2.length+' users online with name '+whois[2]+': '+JSON.stringify(s2));
-				})
-			};
-			if (/^\/(rooms|r)$/i.test(msg)) {socket.emit('message','You are joining these rooms: '+JSON.stringify([...socket.rooms]))}
-			if (/^\/(users|u)$/i.test(msg)) {
-				fetchSockets((s)=>{ 
-					let s2=s.map((e)=>{return {id:e.id,data:e.data,rooms:[...e.rooms].slice(1)}}); 
-					socket.emit('message',s2.length+' users online: '+JSON.stringify(s2));
-				})
-			}
 			let message_to_room=(/^\/(message|m)\ ([^\ ]*)\ (.*)$/i.exec(msg)); if (message_to_room&&message_to_room[3]) {
 				io.to(message_to_room[2]).emit('message',safe_text(message_to_room[3]),{sender:socket.id,name:safe_text(socket.data.name),rooms:[safe_text(message_to_room[2])]});
 			};
@@ -99,4 +98,5 @@ io.on('connection', (socket) => {
 		};
 	});
 });
+async function fetchSockets(callback) {callback(await io.fetchSockets())}
 function safe_text(text) {if (text) {return unescape(text).replace(/[^\w\s\däüöÄÜÖß\.,'!\@#$^&%*()\+=\-\[\]\/{}\|:\?]/g,'').slice(0,256)} else {return undefined}}
