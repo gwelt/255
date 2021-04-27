@@ -18,18 +18,20 @@ app.use(bodyParser.json({ strict: true }));
 app.use(function (error, req, res, next){next()}); // don't show error-message, if it's not JSON ... just ignore it
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use('(/255)?/m/:m?', function(req, res) {
-	if (req.body.m) {
-		own_client_socket.emit('message',req.body.m,{rooms:['#broadcast']});
-		res.send('ok');
-	} else if (req.params.m) {
-		own_client_socket.emit('message',req.params.m,{rooms:['#broadcast']});
-		res.send('ok');
-	}
+	if (req.params.m) {own_client_socket.emit('message',req.params.m,{rooms:['#broadcast']})};
+	res.send('ok');
 })
 app.use('(/255)?/api/setpublicip', function(req, res) {var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress; publicip=ip.replace(/^.*:/, ''); res.send(publicip);})
 app.use('(/255)?/api/getpublicip', function(req, res) {res.send(publicip)})
 app.use('(/255)?/api/local', function(req, res) {res.send('<HTML><HEAD><META HTTP-EQUIV="refresh" CONTENT="0;URL=http://'+publicip+':8080"></HEAD></HTML>')})
-app.use('(/255)?', function(req, res) {res.sendFile(require('path').join(__dirname,'client.html'))})
+app.use('(/255)?', function(req, res) {
+	if ((req.method=='POST')&&(req.body)) {
+		if (req.body.message) {
+			own_client_socket.emit('message',req.body.message,{rooms:(Array.isArray(req.body.rooms)?req.body.rooms:['#broadcast'])});
+			res.send('ok');
+		} else {res.send('usage: POST body:{"message":"Hello World!","rooms":["#room1","#room2"]}')}
+	} else {res.sendFile(require('path').join(__dirname,'client.html'))}
+});
 app.use('*', function(req, res) {res.send('404 255_server')})
 server.listen(config.socket_server_port||3000,()=>{console.log(new Date().toISOString()+' | SERVER STARTED, PORT: '+config.socket_server_port)});
 
@@ -69,10 +71,10 @@ io.on('connection', (socket) => {
 				fetchSockets((s)=>{ 
 					let s2=s.find((e)=>{return e.id==kick[2]});
 					if (s2) {
-						socket.emit('message','You kicked user '+kick[2]+'.')
-						s2.emit('message','You got kicked!');
+						socket.emit('message','You kicked user '+kick[2]+'.');
 						// leave all rooms (except his own "private"-room - system will take care)
 						[...s2.rooms].forEach((r)=>{s2.leave(r)});
+						s2.emit('message','You got kicked!');
 						//s2.disconnect(true);
 					}
 				})
