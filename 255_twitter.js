@@ -5,7 +5,8 @@ var global_say=()=>{};
 socket.on('connect', function() {
   console.log(new Date().toISOString()+' | '+socket.id)
   socket.emit('name','twitter');
-  socket.emit('info','I am twitter-bot. Usage: lt [screen_name] [count]');
+  socket.emit('info','twitter-bot following '+config.twitter_follow+'. Usage: /m #twitter lt [screen_name] [count]');
+  socket.emit('join','#twitter');
   global_say=(m)=>{socket.emit('message',m)};
 });
 
