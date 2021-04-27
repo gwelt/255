@@ -9,11 +9,12 @@ socket.on('connect', function() {
 	socket.emit('name','printer');
 	socket.emit('info','Messages to #printer will output on this thermal printer. Usage: /m #printer [text]');
 	socket.emit('join','#printer');
+	if (Array.isArray(config.printer_joins)) {config.printer_joins.forEach((r)=>{socket.emit('join',r)})};
 });
 
 socket.on('message', function(msg,meta) {
 	if (/^--status$/i.test(msg)) {socket.emit('message','listening');}
-	if (meta&&meta.rooms&&meta.rooms.includes('#broadcast')) {
+	if (meta&&meta.rooms&&!meta.rooms.includes('#printer')) {
 		if (meta.name) {msg='('+meta.name+') '+msg};
 		msg=get_time()+' '+msg;
 	}
