@@ -1,7 +1,7 @@
 var config = require('./config.json');
-const socket = require('socket.io-client')('http://'+config.socket_server+':'+config.socket_server_port||'3000');
+const socket = require('socket.io-client')(config.socket_server_URL);
 require('child_process').execSync('stty -F /dev/ttyS0 9600');
-var welcome="================================\\nIP: "+require('os').networkInterfaces()['wlan0'][0]['address']+" (wlan0)\\nSOCKET-SERVER: "+config.socket_server+':'+config.socket_server_port+"\\n================================";
+var welcome="================================\\nIP: "+require('os').networkInterfaces()['wlan0'][0]['address']+" (wlan0)\\nSOCKET-SERVER: "+config.socket_server_URL+"\\n================================";
 
 socket.on('connect', function() {
 	console.log(new Date().toISOString()+' | '+socket.id);

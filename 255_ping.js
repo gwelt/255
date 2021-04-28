@@ -1,5 +1,5 @@
 var config = require('./config.json');
-const socket = require('socket.io-client')('http://'+config.socket_server+':'+config.socket_server_port||'3000');
+const socket = require('socket.io-client')(config.socket_server_URL);
 
 socket.on('connect', function() {
 	console.log(new Date().toISOString()+' | '+socket.id)

@@ -7,7 +7,7 @@ const io = require('socket.io')(server);
 const config = require('./config.json');
 
 const own_client_socket = require('socket.io-client')('http://'+config.socket_server+':'+config.socket_server_port||'3000');
-own_client_socket.emit('info','Listening to '+config.socket_server+':'+(config.socket_server_port||'3000')+'/m and posting everything to #broadcast.');
+own_client_socket.emit('info','Listening to '+config.socket_server+':'+(config.socket_server_port||'3000')+'/m/[messagetext] and posting to #broadcast.');
 own_client_socket.emit('leave','#broadcast');
 
 var publicip="";
@@ -21,9 +21,6 @@ app.use('(/255)?/m/:m?', function(req, res) {
 	if (req.params.m) {own_client_socket.emit('message',req.params.m,{rooms:['#broadcast']})};
 	res.send('ok');
 })
-app.use('(/255)?/api/setpublicip', function(req, res) {var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress; publicip=ip.replace(/^.*:/, ''); res.send(publicip);})
-app.use('(/255)?/api/getpublicip', function(req, res) {res.send(publicip)})
-app.use('(/255)?/api/local', function(req, res) {res.send('<HTML><HEAD><META HTTP-EQUIV="refresh" CONTENT="0;URL=http://'+publicip+':8080"></HEAD></HTML>')})
 app.use('(/255)?', function(req, res) {
 	if ((req.method=='POST')&&(req.body)) {
 		if (req.body.message) {
@@ -47,7 +44,7 @@ io.on('connection', (socket) => {
 	socket.on('message', (msg,meta) => {
 		// handle commands
 		if (/^\//i.test(msg)) {
-			if (/^\/help/i.test(msg)) {socket.emit('message','help: /nick [name] | /join [room] | /leave [room] | /rooms | /users | /whois [name] | /m [room] [message] | /repeat | /credit | /restart')}
+			if (/^\/help/i.test(msg)) {socket.emit('message','help: /nick [name] | /join [room] | /leave [room] | /rooms | /users | /whois [name] | /m [room] [message] | /kick [id] | /repeat | /credit | /restart')}
 			if (/^\/repeat/i.test(msg)) {socket.emit('message',latest_message)}
 			if (/^\/credit$/i.test(msg)) {credit=99;socket.emit('message','Credit: '+credit)}
 			if (/^\/restart$/i.test(msg)) {socket.emit('message','Ok. Restarting.');setTimeout(function(){process.exit()},3000)}
@@ -72,7 +69,7 @@ io.on('connection', (socket) => {
 					let s2=s.find((e)=>{return e.id==kick[2]});
 					if (s2) {
 						socket.emit('message','You kicked user '+kick[2]+'.');
-						// leave all rooms (except his own "private"-room - system will take care)
+						// leave all rooms (including his own "private"-room)
 						[...s2.rooms].forEach((r)=>{s2.leave(r)});
 						s2.emit('message','You got kicked!');
 						//s2.disconnect(true);
