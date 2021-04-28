@@ -6,8 +6,8 @@ const server = require('http').createServer(app);
 const io = require('socket.io')(server);
 const config = require('./config.json');
 
-const own_client_socket = require('socket.io-client')('http://'+config.socket_server+':'+config.socket_server_port||'3000');
-own_client_socket.emit('info','Listening to '+config.socket_server+':'+(config.socket_server_port||'3000')+'/m/[messagetext] and posting to #broadcast.');
+const own_client_socket = require('socket.io-client')(config.socket_server_URL);
+own_client_socket.emit('info','Listening to '+config.socket_server_URL+'/m/[messagetext] and posting to #broadcast.');
 own_client_socket.emit('leave','#broadcast');
 
 var publicip="";
