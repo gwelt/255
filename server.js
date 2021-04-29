@@ -52,7 +52,7 @@ io.on('connection', (socket) => {
 			if (/^\/(users|u)$/i.test(msg)) {
 				fetchSockets((s)=>{ 
 					let s2=s.map((e)=>{
-						let me={address:e.handshake.address,host:e.handshake.headers.host,referer:e.handshake.headers.referer,useragent:e['handshake']['headers']['user-agent']};
+						let me={address:e['handshake']['headers']["x-real-ip"],port:e['handshake']['headers']["x-real-port"],host:e.handshake.headers.host,referer:e.handshake.headers.referer,useragent:e['handshake']['headers']['user-agent']};
 						return {id:e.id,data:e.data,rooms:[...e.rooms].slice(1),me:me}
 					}); 
 					socket.emit('message',s2.length+' users online: '+JSON.stringify(s2));
@@ -64,7 +64,7 @@ io.on('connection', (socket) => {
 			let whois=(/^\/(whois|w)\ ([^\ ]*)$/i.exec(msg)); if (whois) {
 				fetchSockets((s)=>{ 
 					let s2=s.filter((e)=>{return e.data.name==whois[2]}).map((e)=>{
-						let me={address:e.handshake.address,host:e.handshake.headers.host,referer:e.handshake.headers.referer,useragent:e['handshake']['headers']['user-agent']};
+						let me={address:e['handshake']['headers']["x-real-ip"],port:e['handshake']['headers']["x-real-port"],host:e.handshake.headers.host,referer:e.handshake.headers.referer,useragent:e['handshake']['headers']['user-agent']};
 						return {id:e.id,data:e.data,rooms:[...e.rooms].slice(1),me:me}
 					});
 					socket.emit('message',s2.length+' users online with name '+whois[2]+': '+JSON.stringify(s2));
