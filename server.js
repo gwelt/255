@@ -10,10 +10,6 @@ const own_client_socket = require('socket.io-client')(config.socket_server_URL);
 own_client_socket.emit('info','Listening to '+config.socket_server_URL+'/m/[messagetext] and posting to #broadcast.');
 own_client_socket.emit('leave','#broadcast');
 
-var publicip="";
-var latest_message="JUST STARTED.";
-var credit=99; setInterval(function(){credit=99},60*60000);
-
 app.use(bodyParser.json({ strict: true }));
 app.use(function (error, req, res, next){next()}); // don't show error-message, if it's not JSON ... just ignore it
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -29,11 +25,12 @@ app.use('(/255)?', function(req, res) {
 		} else {res.send('usage: POST body:{"message":"Hello World!","rooms":["#room1","#room2"]}')}
 	} else {res.sendFile(require('path').join(__dirname,'client.html'))}
 });
-app.use('*', function(req, res) {res.send('404 255_server')})
-server.listen(config.socket_server_port||3000,()=>{console.log(new Date().toISOString()+' | SERVER STARTED, PORT: '+config.socket_server_port)});
+app.use('*', function(req, res) {res.sendStatus(404)});
+server.listen(config.socket_server_port||3000,()=>{console.log(new Date().toISOString()+' | SERVER STARTED, PORT: '+(config.socket_server_port||3000))});
 
 io.on('connection', (socket) => {
-	socket.emit('message','WELCOME #'+io.engine.clientsCount+' ('+credit+')');
+	let ip=socket['handshake']['headers']["x-real-ip"];
+	socket.emit('message','WELCOME #'+io.engine.clientsCount+(ip?' ('+ip+')':''));
 	socket.join('#broadcast');
 	socket.data={};
 
@@ -44,16 +41,14 @@ io.on('connection', (socket) => {
 	socket.on('message', (msg,meta) => {
 		// handle commands
 		if (/^\//i.test(msg)) {
-			if (/^\/help/i.test(msg)) {socket.emit('message','help: /nick [name] | /join [room] | /leave [room] | /rooms | /users | /whois [name] | /m [room] [message] | /kick [id] | /repeat | /credit | /restart')}
-			if (/^\/repeat/i.test(msg)) {socket.emit('message',latest_message)}
-			if (/^\/credit$/i.test(msg)) {credit=99;socket.emit('message','Credit: '+credit)}
-			if (/^\/restart$/i.test(msg)) {socket.emit('message','Ok. Restarting.');setTimeout(function(){process.exit()},3000)}
+			//if (/^\/restart$/i.test(msg)) {socket.emit('message','Ok. Restarting.');setTimeout(function(){process.exit()},3000)}
+			if (/^\/help/i.test(msg)) {socket.emit('message','help: /nick [name] | /join [room] | /leave [room] | /rooms | /users | /whois [name] | /m [room] [message] | /kick [id]')}
 			if (/^\/(rooms|r)$/i.test(msg)) {socket.emit('message','You are joining these rooms: '+JSON.stringify([...socket.rooms]))}
 			if (/^\/(users|u)$/i.test(msg)) {
 				fetchSockets((s)=>{ 
 					let s2=s.map((e)=>{
-						let me={address:e['handshake']['headers']["x-real-ip"],port:e['handshake']['headers']["x-real-port"],host:e.handshake.headers.host,referer:e.handshake.headers.referer,useragent:e['handshake']['headers']['user-agent']};
-						return {id:e.id,data:e.data,rooms:[...e.rooms].slice(1),me:me}
+						e.data.network={address:e['handshake']['headers']["x-real-ip"],port:e['handshake']['headers']["x-real-port"],host:e.handshake.headers.host,referer:e.handshake.headers.referer,useragent:e['handshake']['headers']['user-agent']};
+						return {id:e.id,rooms:[...e.rooms].slice(1),data:e.data}
 					}); 
 					socket.emit('message',s2.length+' users online: '+JSON.stringify(s2));
 				})
@@ -64,8 +59,8 @@ io.on('connection', (socket) => {
 			let whois=(/^\/(whois|w)\ ([^\ ]*)$/i.exec(msg)); if (whois) {
 				fetchSockets((s)=>{ 
 					let s2=s.filter((e)=>{return e.data.name==whois[2]}).map((e)=>{
-						let me={address:e['handshake']['headers']["x-real-ip"],port:e['handshake']['headers']["x-real-port"],host:e.handshake.headers.host,referer:e.handshake.headers.referer,useragent:e['handshake']['headers']['user-agent']};
-						return {id:e.id,data:e.data,rooms:[...e.rooms].slice(1),me:me}
+						e.data.network={address:e['handshake']['headers']["x-real-ip"],port:e['handshake']['headers']["x-real-port"],host:e.handshake.headers.host,referer:e.handshake.headers.referer,useragent:e['handshake']['headers']['user-agent']};
+						return {id:e.id,rooms:[...e.rooms].slice(1),data:e.data}
 					});
 					socket.emit('message',s2.length+' users online with name '+whois[2]+': '+JSON.stringify(s2));
 				})
@@ -87,21 +82,37 @@ io.on('connection', (socket) => {
 			};
 		} 
 		// send/forward message to other clients
-		else if (msg&&credit>0) {
-			// if meta.rooms is given, send message to all given rooms
-			// else send message to all rooms the sender is joining (except his own "private"-room (=socket.id))
-			if ((meta&&meta.rooms) && (Array.isArray(meta.rooms)) && (meta.rooms.length>0)) {} else {
+		else if (msg) {
+			// if no rooms are given, set rooms to all rooms the sender is joining (except his own "private"-room (=socket.id))
+			if ( !((meta&&meta.rooms) && (Array.isArray(meta.rooms)) && (meta.rooms.length>0)) ) {
 				meta=meta||{};
 				meta.rooms=[...socket.rooms].filter((r)=>{return r!==socket.id});
 			}
-			if (meta.rooms.includes('#broadcast')) {credit--; latest_message=safe_text(msg);};
 			if (meta.rooms.length>0) {
-				let ioto=io; 
-				meta.rooms.forEach((r)=>{ioto=ioto.to(r)});
-				ioto.emit('message',safe_text(msg),{sender:socket.id,name:safe_text(socket.data.name),rooms:meta.rooms});
+				if (flood_protect(socket)) {
+					// send message
+					let ioto=io; 
+					meta.rooms.forEach((r)=>{ioto=ioto.to(r)});
+					ioto.emit('message',safe_text(msg),{sender:socket.id,name:safe_text(socket.data.name),rooms:meta.rooms});
+				} else {
+					// send flood-protect-message to user
+					socket.emit('message','Easy there, Turbo. Too many requests recently. Enhance your calm. (credit: '+socket.data.floodprotect.credit+')');
+				}
 			}
 		};
 	});
 });
+
+function flood_protect(socket) {
+	let fp=socket.data.floodprotect||{};
+	let t=new Date().getTime();
+	fp.timestamp=fp.timestamp||t;
+	fp.cost=fp.cost||5;
+	fp.credit=Math.max(  Math.min( (fp.credit||100) + Math.floor((t-fp.timestamp)/1000) - fp.cost , 100)  , -100);
+	fp.timestamp=t;
+	socket.data.floodprotect=fp;
+	return (fp.credit>0);
+}	
+
 async function fetchSockets(callback) {callback(await io.fetchSockets())}
 function safe_text(text) {if (text) {return unescape(text).replace(/[^\w\s\däüöÄÜÖß\.,'!\@#$^&%*()\+=\-\[\]\/{}\|:\?]/g,'').slice(0,256)} else {return undefined}}
