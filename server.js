@@ -9,18 +9,18 @@ const config = require('./config.json');
 app.use(bodyParser.json({ strict: true }));
 app.use(function (error, req, res, next){next()}); // don't show error-message, if it's not JSON ... just ignore it
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use('(/255)?/m/:m?', function(req, res) {
+app.use('(/255)?/m/:m', function(req, res) { // 
 	if (req.params.m) {own_client_socket.emit('message',req.params.m,{rooms:['#broadcast']})};
 	res.send('ok');
 })
-app.use('(/255)?', function(req, res) {
+app.use(/^\/(255)?$/, function(req, res) {
 	if ((req.method=='POST')&&(req.body)) {
 		if (req.body.message) {
 			own_client_socket.emit('message',req.body.message,{rooms:(Array.isArray(req.body.rooms)?req.body.rooms:['#broadcast'])});
 			res.send('ok');
 		} else {res.send('usage: POST body:{"message":"Hello World!","rooms":["#room1","#room2"]}')}
 	} else {res.sendFile(require('path').join(__dirname,'client.html'))}
-});
+})
 app.use('*', function(req, res) {res.sendStatus(404)});
 server.listen(config.socket_server_port||3000,()=>{console.log(new Date().toISOString()+' | SERVER STARTED, PORT: '+(config.socket_server_port||3000))});
 
@@ -34,7 +34,7 @@ io.on('connection', (socket) => {
 	socket.join('#broadcast');
 	socket.data={};
 	socket.on('name', (name) => {socket.data.name=safe_text(name); socket.emit('message','You are now known as '+socket.data.name+'.')});
-	socket.on('info', (info) => {socket.data.info=safe_text(info); socket.emit('message','Your info is: '+socket.data.info)});
+	socket.on('info', (info) => {socket.data.info=safe_text(info); socket.emit('message','Info: '+socket.data.info)});
 	socket.on('join', (room) => {socket.join(room); socket.emit('message','You are joining '+room+' now.')});
 	socket.on('leave', (room) => {socket.leave(room); socket.emit('message','You left '+room+'.')});
 	socket.on('message', (msg,meta) => {
@@ -50,28 +50,32 @@ function safe_text(text) {if (text) {return unescape(text).replace(/[^\w\s\däü
 
 function handle_command(socket,msg,meta) {
 	//if (/^\/restart$/i.test(msg)) {socket.emit('message','Ok. Restarting.');setTimeout(function(){process.exit()},3000)}
-	if (/^\/help/i.test(msg)) {socket.emit('message','help: /nick [name] | /join [room] | /leave [room] | /rooms | /users | /whois [name] | /m [room] [message] | /kick [id]')}
-	if (/^\/(rooms|r)$/i.test(msg)) {socket.emit('message','You are joining these rooms: '+JSON.stringify([...socket.rooms]))}
-	if (/^\/(users|u)$/i.test(msg)) {
-		fetchSockets((s)=>{ 
-			let s2=s.map((e)=>{
-				e.data.network={address:e['handshake']['headers']["x-real-ip"],port:e['handshake']['headers']["x-real-port"],host:e.handshake.headers.host,referer:e.handshake.headers.referer,useragent:e['handshake']['headers']['user-agent']};
-				return {id:e.id,rooms:[...e.rooms].slice(1),data:e.data}
-			}); 
-			socket.emit('message',s2.length+' users online: '+JSON.stringify(s2));
-		})
-	}
+	if (/^\/help/i.test(msg)) {socket.emit('message','help: /nick [name] | /join [room] | /leave [room] | /rooms ([room]) | /users | /whois [name] | /m [room] [message] | /kick [id]')}
 	let name=(/^\/(name|nick|n)\ ([^\ ]*)$/i.exec(msg)); if (name) {socket.data.name=safe_text(name[2]); socket.emit('message','You are now known as '+socket.data.name+'.')};
 	let join=(/^\/(join|j)\ ([^\ ]*)$/i.exec(msg)); if (join) {socket.join(join[2]); socket.emit('message','You are joining '+join[2]+' now.')};
 	let leave=(/^\/(leave|l)\ ([^\ ]*)$/i.exec(msg)); if (leave) {socket.leave(leave[2]); socket.emit('message','You left '+leave[2]+'.')};
-	let whois=(/^\/(whois|w)\ ([^\ ]*)$/i.exec(msg)); if (whois) {
+	let users=(/^\/(users|u|whois|w)\ ?([^\ ]*)?$/i.exec(msg)); if (users) {
 		fetchSockets((s)=>{ 
-			let s2=s.filter((e)=>{return e.data.name==whois[2]}).map((e)=>{
+			let s2=s.filter((e)=>{return (users[2]==undefined)||(e.data.name==users[2])}).map((e)=>{
 				e.data.network={address:e['handshake']['headers']["x-real-ip"],port:e['handshake']['headers']["x-real-port"],host:e.handshake.headers.host,referer:e.handshake.headers.referer,useragent:e['handshake']['headers']['user-agent']};
-				return {id:e.id,rooms:[...e.rooms].slice(1),data:e.data}
-			});
-			socket.emit('message',s2.length+' users online with name '+whois[2]+': '+JSON.stringify(s2));
+				return {id:e.id,rooms:[...e.rooms],data:e.data}
+			}); 
+			socket.emit('message',s2.length+' users online'+(users[2]?' with name '+users[2]:'')+': '+JSON.stringify(s2));
 		})
+	};
+	let rooms=(/^\/(rooms|r)\ ?([^\ ]*)?$/i.exec(msg)); if (rooms) {
+		if (rooms[2]==undefined) {
+			socket.emit('message','You are joining these rooms: '+JSON.stringify([...socket.rooms]));
+			socket.emit('message','All rooms: '+JSON.stringify([...io.sockets.adapter.rooms].map((e)=>{return e[0]}).sort()));
+		} else {
+			fetchSockets((s)=>{ 
+				let s2=s.filter((e)=>{return (e.rooms.has(rooms[2]))}).map((e)=>{
+					e.data.network={address:e['handshake']['headers']["x-real-ip"],port:e['handshake']['headers']["x-real-port"],host:e.handshake.headers.host,referer:e.handshake.headers.referer,useragent:e['handshake']['headers']['user-agent']};
+					return {id:e.id,rooms:[...e.rooms],data:e.data}
+				}); 
+				socket.emit('message',s2.length+' users in room '+rooms[2]+': '+JSON.stringify(s2));
+			})
+		}
 	};
 	let kick=(/^\/(kick|k)\ ([^\ ]*)$/i.exec(msg)); if (kick) {
 		fetchSockets((s)=>{ 
@@ -114,7 +118,7 @@ function flood_protect(socket) {
 	let t=new Date().getTime();
 	fp.timestamp=fp.timestamp||t;
 	fp.cost=fp.cost||5;
-	fp.credit=Math.max(  Math.min( (fp.credit||100) + Math.floor((t-fp.timestamp)/1000) - fp.cost , 100)  , -100);
+	fp.credit=Math.max(  Math.min( (fp.credit||(100+fp.cost)) + Math.floor((t-fp.timestamp)/1000) - fp.cost , 100)  , -100);
 	fp.timestamp=t;
 	socket.data.floodprotect=fp;
 	return (fp.credit>0);
