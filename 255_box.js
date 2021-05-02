@@ -6,66 +6,68 @@ var current_ip="";
 socket.on('connect', function() {
   console.log(new Date().toISOString()+' | '+socket.id)
   socket.emit('name','box');
-  socket.emit('info','This is the box. Usage: drucker an/aus | licht an/aus | beep an/aus | beep [count] | bssid | essid | sudoku | sudokunew | shplst [id] | liga [bl1|bl2] [tabelle|spiele|check|update]');
   socket.emit('join','#box');
-  if (Array.isArray(config.private_rooms)) {config.private_rooms.forEach((r)=>{socket.emit('join',r)})};
-  global_say=(m)=>{socket.emit('message',m)};
+  if (Array.isArray(config.box_rooms)) {config.box_rooms.forEach((r)=>{socket.emit('join',r)})};
+  socket.emit('info','This is the box. Usage: drucker an/aus | licht an/aus | beep an/aus | beep [count] | bssid | essid | sudoku | sudokunew | shplst [id] | liga [bl1|bl2] [tabelle|spiele|check|update]');
+  global_say=(m)=>{socket.emit('message',m,{rooms:['#box']})};
 });
 
 socket.on('message', function(data,meta) {
-  //print(data);
-  lcd_show(data);
-  //if (/^--status$/i.test(data)) {global_say('DRUCKER:'+printer_is+' LICHT:'+light_is+' BEEP:'+beep_is)}
-  if (/^drucker\ an$/i.test(data)) {printer_is='AN';global_say('          DRUCKER AN '+get_time(1))}
-  if (/^drucker\ aus$/i.test(data)) {printer_is='AUS';global_say('          DRUCKER AUS '+get_time(1))}
-  if (/^licht\ an$/i.test(data)) {require('child_process').execSync(__dirname+'/sendElro -i 1 -u 23 -r 15 -t');global_say('          LICHT AN   '+get_time(1));light_is="AN"}
-  if (/^licht\ aus$/i.test(data)) {require('child_process').execSync(__dirname+'/sendElro -i 1 -u 23 -r 15 -f');global_say('          LICHT AUS  '+get_time(1));light_is="AUS"}
-  if (/^tv\ an$/i.test(data)) {require('child_process').execSync(__dirname+'/sendElro -i 2 -u 23 -r 15 -t');global_say('          TV AN      '+get_time(1));}
-  if (/^tv\ aus$/i.test(data)) {require('child_process').execSync(__dirname+'/sendElro -i 2 -u 23 -r 15 -f');global_say('          TV AUS     '+get_time(1));}
-  if (/^baum\ an$/i.test(data)) {require('child_process').execSync(__dirname+'/sendElro -i 3 -u 23 -r 15 -t');global_say('          BAUM AN    '+get_time(1));}
-  if (/^baum\ aus$/i.test(data)) {require('child_process').execSync(__dirname+'/sendElro -i 3 -u 23 -r 15 -f');global_say('          BAUM AUS   '+get_time(1));}
-  if (/^bssid$/i.test(data)) {global_say(require('child_process').execSync('iwlist wlan0 scanning | grep -o ..:..:..:..:..:..',{stdio:'pipe'}).toString().replace(/[\r\n]/g,' '))}
-  if (/^essid$/i.test(data)) {global_say(require('child_process').execSync("iwlist wlan0 scanning | grep ESSID",{stdio:'pipe'}).toString().replace(/\ /g,''))}
-  let b=(/^beep\ (\d)$/i.exec(data)); if (b) {if (beep_is!='AUS') {beep(b[1],20,100)}};
-  if (/^beep\ an$/i.test(data)) {beep_is='AN';  global_say('           BEEP AN   '+get_time(1))}
-  if (/^beep\ aus$/i.test(data)) {beep_is='AUS';global_say('           BEEP AUS  '+get_time(1))}
-  let shplst=(/^shplst\ ([^\ ]*)$/i.exec(data)); if (shplst) {global_say('PRINTING SHOPPINGLIST');get_shplst(shplst[1],'LIDL',send_to_printer)}
-  let liga_all=(/^liga\ ([^\ ]*)$/i.exec(data)); if (liga_all) {
-   	global_say('OK LIGA '+liga_all[1]);
-  	if (liga_all[1]=='bl') {
- 	  	get_liga('bl1/check',(msg)=>{
-   			send_to_printer(msg);
- 	  		get_liga('bl1/print',(msg)=>{send_to_printer(msg)});		
- 		  	get_liga('bl2/check',(msg)=>{
-   				send_to_printer(msg);
- 		  		get_liga('bl2/print',(msg)=>{send_to_printer(msg)});		
-  	 	 	});
- 	  	});
-  	} else {
- 	  	get_liga(liga_all[1]+'/check',(msg)=>{
-   			send_to_printer(msg);
- 	  		get_liga(liga_all[1]+'/print',(msg)=>{send_to_printer(msg)});
- 	  	});
-  	}
-    let liga=(/^liga\ ([^\ ]*)\ ([^\ ]*)$/i.exec(data)); if (liga) {
-      if ((liga[2]=='check')||(liga[2]=='update')) {global_say('OK LIGA '+liga[1]+' '+liga[2].toUpperCase());get_liga(liga[1]+'/'+liga[2],send_to_printer)}
-      else {global_say('OK LIGA '+liga[1]+' PRINT');get_liga(liga[1]+'/print/'+liga[2],send_to_printer)}
+  if (meta&&meta.rooms&&meta.rooms.includes('#box')) {
+    //print(data);
+    lcd_show(data);
+    //if (/^--status$/i.test(data)) {global_say('DRUCKER:'+printer_is+' LICHT:'+light_is+' BEEP:'+beep_is)}
+    if (/^drucker\ an$/i.test(data)) {printer_is='AN';global_say('          DRUCKER AN '+get_time(1))}
+    if (/^drucker\ aus$/i.test(data)) {printer_is='AUS';global_say('          DRUCKER AUS '+get_time(1))}
+    if (/^licht\ an$/i.test(data)) {require('child_process').execSync(__dirname+'/sendElro -i 1 -u 23 -r 15 -t');global_say('          LICHT AN   '+get_time(1));light_is="AN"}
+    if (/^licht\ aus$/i.test(data)) {require('child_process').execSync(__dirname+'/sendElro -i 1 -u 23 -r 15 -f');global_say('          LICHT AUS  '+get_time(1));light_is="AUS"}
+    if (/^tv\ an$/i.test(data)) {require('child_process').execSync(__dirname+'/sendElro -i 2 -u 23 -r 15 -t');global_say('          TV AN      '+get_time(1));}
+    if (/^tv\ aus$/i.test(data)) {require('child_process').execSync(__dirname+'/sendElro -i 2 -u 23 -r 15 -f');global_say('          TV AUS     '+get_time(1));}
+    if (/^baum\ an$/i.test(data)) {require('child_process').execSync(__dirname+'/sendElro -i 3 -u 23 -r 15 -t');global_say('          BAUM AN    '+get_time(1));}
+    if (/^baum\ aus$/i.test(data)) {require('child_process').execSync(__dirname+'/sendElro -i 3 -u 23 -r 15 -f');global_say('          BAUM AUS   '+get_time(1));}
+    if (/^bssid$/i.test(data)) {global_say(require('child_process').execSync('iwlist wlan0 scanning | grep -o ..:..:..:..:..:..',{stdio:'pipe'}).toString().replace(/[\r\n]/g,' '))}
+    if (/^essid$/i.test(data)) {global_say(require('child_process').execSync("iwlist wlan0 scanning | grep ESSID",{stdio:'pipe'}).toString().replace(/\ /g,''))}
+    let b=(/^beep\ (\d)$/i.exec(data)); if (b) {if (beep_is!='AUS') {beep(b[1],20,100)}};
+    if (/^beep\ an$/i.test(data)) {beep_is='AN';  global_say('           BEEP AN   '+get_time(1))}
+    if (/^beep\ aus$/i.test(data)) {beep_is='AUS';global_say('           BEEP AUS  '+get_time(1))}
+    let shplst=(/^shplst\ ([^\ ]*)$/i.exec(data)); if (shplst) {global_say('PRINTING SHOPPINGLIST');get_shplst(shplst[1],'LIDL',send_to_printer)}
+    let liga_all=(/^liga\ ([^\ ]*)$/i.exec(data)); if (liga_all) {
+     	global_say('OK LIGA '+liga_all[1]);
+    	if (liga_all[1]=='bl') {
+   	  	get_liga('bl1/check',(msg)=>{
+     			send_to_printer(msg);
+   	  		get_liga('bl1/print',(msg)=>{send_to_printer(msg)});		
+   		  	get_liga('bl2/check',(msg)=>{
+     				send_to_printer(msg);
+   		  		get_liga('bl2/print',(msg)=>{send_to_printer(msg)});		
+    	 	 	});
+   	  	});
+    	} else {
+   	  	get_liga(liga_all[1]+'/check',(msg)=>{
+     			send_to_printer(msg);
+   	  		get_liga(liga_all[1]+'/print',(msg)=>{send_to_printer(msg)});
+   	  	});
+    	}
+      let liga=(/^liga\ ([^\ ]*)\ ([^\ ]*)$/i.exec(data)); if (liga) {
+        if ((liga[2]=='check')||(liga[2]=='update')) {global_say('OK LIGA '+liga[1]+' '+liga[2].toUpperCase());get_liga(liga[1]+'/'+liga[2],send_to_printer)}
+        else {global_say('OK LIGA '+liga[1]+' PRINT');get_liga(liga[1]+'/print/'+liga[2],send_to_printer)}
+      }
     }
-  }
-  if (/^sudokunew$/i.test(data)) {
-    global_say('PRINTING NEW SUDOKU');
-    var puzzle=require('../sudoku/sudoku_generator.js').generate_with_masks();
-    var s=require('../sudoku/sudoku_solver.js').solve(puzzle[0]);
-    var hints=puzzle[0].split('').map((c)=>{return c=='-'?0:1}).reduce((l,r)=>{return l+r},0);
-    send_to_printer('\n    PUZZLE:\n'+print_2d(puzzle[0])+'\n\n    SOLUTION:\n'+print_2d(puzzle[1])+'\n    RATING: '+s.stats.dig_needed+'.'+hints+'\n\n');
-  }
-  if (/^sudoku$/i.test(data)) {
-    global_say('PRINTING SUDOKU');
-    get_sudoku('api/get',(json)=>{
-      let sudoku=JSON.parse(json);
-      //send_to_printer('\n    PUZZLE:\n'+print_2d(sudoku.puzzle)+'\n\n    SOLUTION:\n'+print_2d(sudoku.solution)+'\n\n');
-      send_to_printer('\n    PUZZLE:\n'+print_2d(sudoku.puzzle)+'\n\n    CURRENT:\n'+print_2d(sudoku.current)+'\n\n    SOLUTION:\n'+print_2d(sudoku.solution)+'\n\n');
-    })
+    if (/^sudokunew$/i.test(data)) {
+      global_say('PRINTING NEW SUDOKU');
+      var puzzle=require('../sudoku/sudoku_generator.js').generate_with_masks();
+      var s=require('../sudoku/sudoku_solver.js').solve(puzzle[0]);
+      var hints=puzzle[0].split('').map((c)=>{return c=='-'?0:1}).reduce((l,r)=>{return l+r},0);
+      send_to_printer('\n    PUZZLE:\n'+print_2d(puzzle[0])+'\n\n    SOLUTION:\n'+print_2d(puzzle[1])+'\n    RATING: '+s.stats.dig_needed+'.'+hints+'\n\n');
+    }
+    if (/^sudoku$/i.test(data)) {
+      global_say('PRINTING SUDOKU');
+      get_sudoku('api/get',(json)=>{
+        let sudoku=JSON.parse(json);
+        //send_to_printer('\n    PUZZLE:\n'+print_2d(sudoku.puzzle)+'\n\n    SOLUTION:\n'+print_2d(sudoku.solution)+'\n\n');
+        send_to_printer('\n    PUZZLE:\n'+print_2d(sudoku.puzzle)+'\n\n    CURRENT:\n'+print_2d(sudoku.current)+'\n\n    SOLUTION:\n'+print_2d(sudoku.solution)+'\n\n');
+      })
+    }
   }
 });
 

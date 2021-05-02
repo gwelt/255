@@ -5,18 +5,19 @@ const app = express();
 const server = require('http').createServer(app);
 const io = require('socket.io')(server);
 const config = require('./config.json');
+const default_room = '#broadcast';
 
 app.use(bodyParser.json({ strict: true }));
 app.use(function (error, req, res, next){next()}); // don't show error-message, if it's not JSON ... just ignore it
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use('(/255)?/m/:m', function(req, res) { // 
-	if (req.params.m) {own_client_socket.emit('message',req.params.m,{rooms:['#broadcast']})};
+	if (req.params.m) {own_client_socket.emit('message',req.params.m,{rooms:[default_room]})};
 	res.send('ok');
 })
 app.use(/^\/(255)?$/, function(req, res) {
 	if ((req.method=='POST')&&(req.body)) {
 		if (req.body.message) {
-			own_client_socket.emit('message',req.body.message,{rooms:(Array.isArray(req.body.rooms)?req.body.rooms:['#broadcast'])});
+			own_client_socket.emit('message',req.body.message,{rooms:(Array.isArray(req.body.rooms)?req.body.rooms:[default_room])});
 			res.send('ok');
 		} else {res.send('usage: POST body:{"message":"Hello World!","rooms":["#room1","#room2"]}')}
 	} else {res.sendFile(require('path').join(__dirname,'client.html'))}
@@ -25,13 +26,12 @@ app.use('*', function(req, res) {res.sendStatus(404)});
 server.listen(config.socket_server_port||3000,()=>{console.log(new Date().toISOString()+' | SERVER STARTED, PORT: '+(config.socket_server_port||3000))});
 
 const own_client_socket = require('socket.io-client')(config.socket_server_URL);
-own_client_socket.emit('info','Listening to '+config.socket_server_URL+'/m/[messagetext] and posting to #broadcast.');
-own_client_socket.emit('leave','#broadcast');
+own_client_socket.emit('info','Listening to '+config.socket_server_URL+'/m/[messagetext] and posting to '+default_room+'.');
 
 io.on('connection', (socket) => {
 	let ip=socket['handshake']['headers']["x-real-ip"];
 	socket.emit('message','WELCOME #'+io.engine.clientsCount+(ip?' ('+ip+')':''));
-	socket.join('#broadcast');
+	//socket.join(default_room);
 	socket.data={};
 	socket.data.network={address:socket['handshake']['headers']["x-real-ip"],port:socket['handshake']['headers']["x-real-port"],host:socket.handshake.headers.host,referer:socket.handshake.headers.referer,useragent:socket['handshake']['headers']['user-agent']};
 	socket.on('name', (name) => {socket.data.name=safe_text(name); socket.emit('message','You are now known as '+socket.data.name+'.')});
@@ -94,10 +94,11 @@ function handle_command(socket,msg,meta) {
 }
 
 function forward_message(socket,msg,meta) {
-	// if no rooms are given in meta, set rooms to all rooms the sender is joining (except his own "private"-room (=socket.id))
+	// if no rooms are given in meta, send to default_room only
 	if ( !((meta&&meta.rooms) && (Array.isArray(meta.rooms)) && (meta.rooms.length>0)) ) {
 		meta=meta||{};
-		meta.rooms=[...socket.rooms].filter((r)=>{return r!==socket.id});
+		meta.rooms=[default_room];
+		//meta.rooms=[...socket.rooms].filter((r)=>{return r!==socket.id}); // all joined room except own private room
 	}
 	if (meta.rooms.length>0) {
 		if (flood_protect(socket)) {

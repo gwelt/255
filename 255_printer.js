@@ -6,9 +6,9 @@ ttyS0_print("================================\\nIP: "+require('os').networkInter
 socket.on('connect', function() {
 	console.log(new Date().toISOString()+' | '+socket.id);
 	socket.emit('name','printer');
-	socket.emit('info','Messages to #printer will output on this thermal printer. Usage: /m #printer [text]');
 	socket.emit('join','#printer');
-	if (Array.isArray(config.private_rooms)) {config.private_rooms.forEach((r)=>{socket.emit('join',r)})};
+	if (Array.isArray(config.printer_rooms)) {config.printer_rooms.forEach((r)=>{socket.emit('join',r)})};
+	socket.emit('info','Messages to #printer will output on this thermal printer. Usage: /m #printer [text]');
 });
 
 socket.on('message', function(msg,meta) {

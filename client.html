@@ -37,7 +37,7 @@
 	if (useSocketIO) {setTimeout(function(){SocketIO()},0)};
 	function SocketIO() {if (!socket) {loadScript('/socket.io/socket.io.js', function() {
 		socket=io();
-		socket.on('connect', function () {socket_id=socket.id});
+		socket.on('connect', function () {socket_id=socket.id;socket.emit('join','#broadcast')});
 		socket.on('message', function (msg,meta) {
 			if (meta) {tweet('tweet',msg,(meta&&meta.name)?meta.name:undefined,(meta&&meta.rooms)?meta.rooms:undefined)} else {tweet('tweet',msg)}
 		});
