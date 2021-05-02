@@ -5,7 +5,7 @@ socket.on('connect', function() {
 	console.log(new Date().toISOString()+' | '+socket.id)
 	socket.emit('name','ping');
 	socket.emit('join','#ping');
-	socket.emit('info','Sending a message to room #ping every 5 seconds. Pongs you on ping. Usage: /m #ping ping');
+	socket.emit('info','Sending a message to room #ping every 15 seconds. Pongs you on ping. Usage: /m #ping ping');
 });
 
 socket.on('message', function(msg,meta) {
@@ -15,5 +15,5 @@ socket.on('message', function(msg,meta) {
 });
 
 setInterval(function(){
-	socket.volatile.emit('message',new Date().toISOString());
-},5000);
+	socket.volatile.emit('message',new Date().toISOString(),{rooms:['#ping']});
+},15000);

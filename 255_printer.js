@@ -22,7 +22,7 @@ socket.on('message', function(msg,meta) {
 function ttyS0_print(msg) {
 	var mapUmlaute = {ä:"ae",ü:"ue",ö:"oe",Ä:"Ae",Ü:"Ue",Ö:"Oe",ß:"ss"};
 	msg=msg.replace(/[äüöÄÜÖß]/g,function(m){return mapUmlaute[m]});
-	msg=msg.replace(/\ {2,}/g," ");
+	msg=msg.replace(/\ {2,}/g," ").slice(0,256);
 	require('child_process').execSync('echo "'+msg+'" > /dev/ttyS0','e');
 }
 

@@ -47,7 +47,7 @@ io.on('connection', (socket) => {
 });
 
 async function fetchSockets(callback) {callback(await io.fetchSockets())}
-function safe_text(text) {if (text) {return unescape(text).replace(/[^\w\s\däüöÄÜÖß\.,'!\@#$^&%*()\+=\-\[\]\/{}\|:\?]/g,'').slice(0,256)} else {return undefined}}
+function safe_text(text) {if (text) {return unescape(text).replace(/[^\w\s\däüöÄÜÖß\.,'"!\@#$^&%*()\+=\-\[\]\/{}\|:\?]/g,'').slice(0,10240)} else {return undefined}}
 
 function handle_command(socket,msg,meta) {
 	//if (/^\/restart$/i.test(msg)) {socket.emit('message','Ok. Restarting.');setTimeout(function(){process.exit()},3000)}
@@ -103,6 +103,7 @@ function forward_message(socket,msg,meta) {
 	if (meta.rooms.length>0) {
 		if (flood_protect(socket)) {
 			// send message
+			// TODO: Don't mix public and private rooms
 			let ioto=io; 
 			meta.rooms.forEach((r)=>{ioto=ioto.to(r)});
 			ioto.emit('message',safe_text(msg),{sender:socket.id,name:safe_text(socket.data.name),rooms:meta.rooms});
