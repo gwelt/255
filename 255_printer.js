@@ -1,19 +1,17 @@
 var config = require('./config.json');
 const socket = require('socket.io-client')(config.socket_server_URL);
 require('child_process').execSync('stty -F /dev/ttyS0 9600');
-var welcome="================================\\nIP: "+require('os').networkInterfaces()['wlan0'][0]['address']+" (wlan0)\\nSOCKET-SERVER: "+config.socket_server_URL+"\\n================================";
+ttyS0_print("================================\\nIP: "+require('os').networkInterfaces()['wlan0'][0]['address']+" (wlan0)\\nSOCKET-SERVER: "+config.socket_server_URL+"\\n================================");
 
 socket.on('connect', function() {
 	console.log(new Date().toISOString()+' | '+socket.id);
-	ttyS0_print(welcome);
 	socket.emit('name','printer');
 	socket.emit('info','Messages to #printer will output on this thermal printer. Usage: /m #printer [text]');
 	socket.emit('join','#printer');
-	if (Array.isArray(config.printer_joins)) {config.printer_joins.forEach((r)=>{socket.emit('join',r)})};
+	if (Array.isArray(config.printer_joins)) {config.private_rooms.forEach((r)=>{socket.emit('join',r)})};
 });
 
 socket.on('message', function(msg,meta) {
-	if (/^--status$/i.test(msg)) {socket.emit('message','listening');}
 	if (meta&&meta.rooms&&!meta.rooms.includes('#printer')) {
 		if (meta.name) {msg='('+meta.name+') '+msg};
 		msg=get_time()+' '+msg;

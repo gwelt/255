@@ -33,6 +33,7 @@ io.on('connection', (socket) => {
 	socket.emit('message','WELCOME #'+io.engine.clientsCount+(ip?' ('+ip+')':''));
 	socket.join('#broadcast');
 	socket.data={};
+	socket.data.network={address:socket['handshake']['headers']["x-real-ip"],port:socket['handshake']['headers']["x-real-port"],host:socket.handshake.headers.host,referer:socket.handshake.headers.referer,useragent:socket['handshake']['headers']['user-agent']};
 	socket.on('name', (name) => {socket.data.name=safe_text(name); socket.emit('message','You are now known as '+socket.data.name+'.')});
 	socket.on('info', (info) => {socket.data.info=safe_text(info); socket.emit('message','Info: '+socket.data.info)});
 	socket.on('join', (room) => {socket.join(room); socket.emit('message','You are joining '+room+' now.')});
@@ -56,22 +57,20 @@ function handle_command(socket,msg,meta) {
 	let leave=(/^\/(leave|l)\ ([^\ ]*)$/i.exec(msg)); if (leave) {socket.leave(leave[2]); socket.emit('message','You left '+leave[2]+'.')};
 	let users=(/^\/(users|u|whois|w)\ ?([^\ ]*)?$/i.exec(msg)); if (users) {
 		fetchSockets((s)=>{ 
-			let s2=s.filter((e)=>{return (users[2]==undefined)||(e.data.name==users[2])}).map((e)=>{
-				e.data.network={address:e['handshake']['headers']["x-real-ip"],port:e['handshake']['headers']["x-real-port"],host:e.handshake.headers.host,referer:e.handshake.headers.referer,useragent:e['handshake']['headers']['user-agent']};
-				return {id:e.id,rooms:[...e.rooms],data:e.data}
+			let s2=s.filter((e)=>{return (users[2]==undefined)||(e.data.name==users[2])||(e.id==users[2])}).map((e)=>{
+				return {id:e.id,rooms:[...e.rooms].filter((e)=>{return e.startsWith('#')}),data:e.data}
 			}); 
-			socket.emit('message',s2.length+' users online'+(users[2]?' with name '+users[2]:'')+': '+JSON.stringify(s2));
+			socket.emit('message',s2.length+' users online'+(users[2]?' with name|id '+users[2]:'')+': '+JSON.stringify(s2));
 		})
 	};
 	let rooms=(/^\/(rooms|r)\ ?([^\ ]*)?$/i.exec(msg)); if (rooms) {
 		if (rooms[2]==undefined) {
 			socket.emit('message','You are joining these rooms: '+JSON.stringify([...socket.rooms]));
-			socket.emit('message','All rooms: '+JSON.stringify([...io.sockets.adapter.rooms].map((e)=>{return e[0]}).sort()));
+			socket.emit('message','All public rooms: '+JSON.stringify([...io.sockets.adapter.rooms].map((e)=>{return e[0]}).filter((e)=>{return e.startsWith('#')}).sort()));
 		} else {
 			fetchSockets((s)=>{ 
 				let s2=s.filter((e)=>{return (e.rooms.has(rooms[2]))}).map((e)=>{
-					e.data.network={address:e['handshake']['headers']["x-real-ip"],port:e['handshake']['headers']["x-real-port"],host:e.handshake.headers.host,referer:e.handshake.headers.referer,useragent:e['handshake']['headers']['user-agent']};
-					return {id:e.id,rooms:[...e.rooms],data:e.data}
+					return {id:e.id,rooms:[...e.rooms].filter((e)=>{return e.startsWith('#')}),data:e.data}
 				}); 
 				socket.emit('message',s2.length+' users in room '+rooms[2]+': '+JSON.stringify(s2));
 			})
