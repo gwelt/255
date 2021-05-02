@@ -8,7 +8,7 @@ socket.on('connect', function() {
   socket.emit('name','box');
   socket.emit('info','This is the box. Usage: drucker an/aus | licht an/aus | beep an/aus | beep [count] | bssid | essid | sudoku | sudokunew | shplst [id] | liga [bl1|bl2] [tabelle|spiele|check|update]');
   socket.emit('join','#box');
-  if (Array.isArray(config.printer_joins)) {config.private_rooms.forEach((r)=>{socket.emit('join',r)})};
+  if (Array.isArray(config.private_rooms)) {config.private_rooms.forEach((r)=>{socket.emit('join',r)})};
   global_say=(m)=>{socket.emit('message',m)};
 });
 
