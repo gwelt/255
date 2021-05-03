@@ -6,7 +6,6 @@ socket.on('connect', function() {
   console.log(new Date().toISOString()+' | '+socket.id)
   socket.emit('name','twitter');
   socket.emit('join','#twitter');
-  if (Array.isArray(config.twitter_rooms)) {config.twitter_rooms.forEach((r)=>{socket.emit('join',r)})};
   socket.emit('info','twitter-bot following '+config.twitter_follow+'. Usage: /m #twitter lt [screen_name] [count]');
   global_say=(m)=>{socket.emit('message',m,{rooms:['#twitter']})};
 });
