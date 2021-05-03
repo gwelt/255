@@ -5,7 +5,7 @@ socket.on('connect', function() {
 	console.log(new Date().toISOString()+' | '+socket.id)
 	socket.emit('name','rki');
 	socket.emit('join','#rki');
-	socket.emit('info','Frequently posting corona-numbers from rki.de to #rki. Serving data as JSON via private message on request. Usage: /m #rki help');
+	socket.emit('info','Frequently posting corona-numbers from rki.de to #broadcast. Serving data as JSON via private message on request. Usage: /m #rki help');
 });
 
 socket.on('message', function(msg,meta) {
@@ -72,19 +72,21 @@ RKIDATA.prototype.update = function(RKI_dataset) {
 RKIDATA.prototype.Inz7T = function(AdmUnitId_or_LandName,days_back_in_history) {
 	if (days_back_in_history>=this.db.length) {return undefined};
 	let selected_RKI_dataset=this.db[this.db.length-1-(days_back_in_history||0)];
-	if (AdmUnitId_or_LandName) {
+	if (AdmUnitId_or_LandName!==undefined) {
 		return selected_RKI_dataset.rki_key_data.filter((e)=>{return e.attributes.AdmUnitId==this.get_AdminUnitId_by_LandName(AdmUnitId_or_LandName)}).map((e)=>{return e.attributes.Inz7T})[0];
 	} else {
-		let inz7t=selected_RKI_dataset.rki_key_data.map((e)=>{return {'Land':this.get_Land_by_AdmUnitId(e.attributes.AdmUnitId),'Inz7T':e.attributes.Inz7T}});
+		let inz7t=selected_RKI_dataset.rki_key_data.map((e)=>{return {'Land':this.get_Land_by_AdmUnitId(e.attributes.AdmUnitId),'Inz7T':e.attributes.Inz7T,'diff':this.Inz7T_diff_prev_day(e.attributes.AdmUnitId)}});
 		return {'Inz7T':inz7t,'Datenstand':selected_RKI_dataset.rki_data_status.Timestamp_txt};
 	}
 }
 
 RKIDATA.prototype.Inz7T_diff_prev_day = function(AdmUnitId_or_LandName) {
-	let yesterday = this.Inz7T(AdmUnitId_or_LandName,1);
-	let today = this.Inz7T(AdmUnitId_or_LandName)||0;
-	let res=Math.round((today-(yesterday?yesterday:today))*10)/10;
-	return ((res>=0)?'+':'')+res;
+	if (AdmUnitId_or_LandName!==undefined) {
+		let yesterday = this.Inz7T(AdmUnitId_or_LandName,1);
+		let today = this.Inz7T(AdmUnitId_or_LandName)||0;
+		let res=Math.round((today-(yesterday?yesterday:today))*10)/10;
+		return ((res>=0)?'+':'')+res;
+	} else {return undefined}
 }
 
 RKIDATA.prototype.get_Land_by_AdmUnitId = function(AdmUnitId) {
