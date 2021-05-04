@@ -26,7 +26,7 @@ app.use('*', function(req, res) {res.sendStatus(404)});
 server.listen(config.socket_server_port||3000,()=>{console.log(new Date().toISOString()+' | SERVER STARTED, PORT: '+(config.socket_server_port||3000))});
 
 const own_client_socket = require('socket.io-client')(config.socket_server_URL);
-own_client_socket.emit('info','Listening to '+config.socket_server_URL+'/m/[messagetext] and posting to '+default_room+'.');
+own_client_socket.emit('info','Listening to https://[this_server]/m/[messagetext] and posting to '+default_room+'.');
 
 io.on('connection', (socket) => {
 	let ip=socket['handshake']['headers']["x-real-ip"];
@@ -55,24 +55,43 @@ function handle_command(socket,msg,meta) {
 	let name=(/^\/(name|nick|n)\ ([^\ ]*)$/i.exec(msg)); if (name) {socket.data.name=safe_text(name[2]); socket.emit('message','You are now known as '+socket.data.name+'.')};
 	let join=(/^\/(join|j)\ ([^\ ]*)$/i.exec(msg)); if (join) {socket.join(join[2]); socket.emit('message','You are joining '+join[2]+' now.')};
 	let leave=(/^\/(leave|l)\ ([^\ ]*)$/i.exec(msg)); if (leave) {socket.leave(leave[2]); socket.emit('message','You left '+leave[2]+'.')};
-	let users=(/^\/(users|u|whois|w)\ ?([^\ ]*)?$/i.exec(msg)); if (users) {
+	let users=(/^\/(users|u|whois|w|allusers)\ ?([^\ ]*)?$/i.exec(msg)); if (users) {
 		fetchSockets((s)=>{ 
 			let s2=s.filter((e)=>{return (users[2]==undefined)||(e.data.name==users[2])||(e.id==users[2])}).map((e)=>{
 				return {id:e.id,rooms:[...e.rooms].filter((e)=>{return e.startsWith('#')}),data:e.data}
-			}); 
-			socket.emit('message',s2.length+' users online'+(users[2]?' with name|id '+users[2]:'')+': '+JSON.stringify(s2));
+			});
+			if (users[2]) {
+				socket.emit('message',s2.length+' users online'+(users[2]?' with name|id '+users[2]:'')+': '+JSON.stringify(s2));
+			} else if (users[1]=='allusers') {
+				socket.emit('message',s2.length+' users online: '+JSON.stringify(s2));
+			} else {
+				let me='You are: '+socket.data.name+' | '+socket.id;
+				let all_users_ids=s2.length+' users in total.'; //: '+s2.map((e)=>{return e.id}).join(', ');
+				let humans=s2.filter((e)=>{return e.data.name&&!e.data.info}).sort((a,b)=>{return a.data.name>b.data.name});
+				humans=(humans.length?humans.length:'No')+' users with a meaningful name'+(humans.length?':':'.')+humans.map((e)=>{return e.data.name}).join(', ');
+				let services=s2.filter((e)=>{return e.data.info}).sort((a,b)=>{return a.data.name>b.data.name});
+				services=(services.length?services.length:'No')+' services'+(services.length?': ':'.')+services.reduce((a,c)=>{return a+'\n'+c.data.name+' | '+c.data.info},'');
+				socket.emit('message',me+'\n'+all_users_ids+'\n'+humans+'\n'+services);
+			}
 		})
 	};
 	let rooms=(/^\/(rooms|r)\ ?([^\ ]*)?$/i.exec(msg)); if (rooms) {
 		if (rooms[2]==undefined) {
-			socket.emit('message','You are joining these rooms: '+JSON.stringify([...socket.rooms]));
-			socket.emit('message','All public rooms: '+JSON.stringify([...io.sockets.adapter.rooms].map((e)=>{return e[0]}).filter((e)=>{return e.startsWith('#')}).sort()));
+			let joining = 'You are joining these rooms: '+[...socket.rooms].join(', ');
+			let all_public_rooms = 'All public rooms: '+[...io.sockets.adapter.rooms].map((e)=>{return e[0]}).filter((e)=>{return e.startsWith('#')}).sort().join(', ');
+			socket.emit('message',joining+'\n'+all_public_rooms);
 		} else {
 			fetchSockets((s)=>{ 
 				let s2=s.filter((e)=>{return (e.rooms.has(rooms[2]))}).map((e)=>{
 					return {id:e.id,rooms:[...e.rooms].filter((e)=>{return e.startsWith('#')}),data:e.data}
 				}); 
-				socket.emit('message',s2.length+' users in room '+rooms[2]+': '+JSON.stringify(s2));
+				let all_users_ids=s2.length+' users in room '+rooms[2]+'.'; //+': '+s2.map((e)=>{return e.id}).join(', ');
+				let humans=s2.filter((e)=>{return e.data.name&&!e.data.info}).sort((a,b)=>{return a.data.name>b.data.name});
+				humans=(humans.length?humans.length:'No')+' users with a meaningful name'+(humans.length?': ':'.')+humans.map((e)=>{return e.data.name}).join(', ');
+				let services=s2.filter((e)=>{return e.data.info}).sort((a,b)=>{return a.data.name>b.data.name});
+				services=(services.length?services.length:'No')+' services'+(services.length?': ':'.')+services.reduce((a,c)=>{return a+'\n'+c.data.name+' | '+c.data.info},'');
+				socket.emit('message',all_users_ids+'\n'+humans+'\n'+services);
+				//socket.emit('message',s2.length+' users in room '+rooms[2]+': '+JSON.stringify(s2));
 			})
 		}
 	};
@@ -98,15 +117,13 @@ function forward_message(socket,msg,meta) {
 	if ( !((meta&&meta.rooms) && (Array.isArray(meta.rooms)) && (meta.rooms.length>0)) ) {
 		meta=meta||{};
 		meta.rooms=[default_room];
-		//meta.rooms=[...socket.rooms].filter((r)=>{return r!==socket.id}); // all joined room except own private room
 	}
 	if (meta.rooms.length>0) {
 		if (flood_protect(socket)) {
 			// send message
-			// TODO: Don't mix public and private rooms
 			let ioto=io; 
 			meta.rooms.forEach((r)=>{ioto=ioto.to(r)});
-			ioto.emit('message',safe_text(msg),{sender:socket.id,name:safe_text(socket.data.name),rooms:meta.rooms});
+			ioto.emit('message',safe_text(msg),{sender:socket.id,name:safe_text(socket.data.name),rooms:meta.rooms.filter((e)=>{return e.startsWith('#')})});
 		} else {
 			// send flood-protect-message to user
 			socket.emit('message','Easy there, Turbo. Too many requests recently. Enhance your calm. (credit: '+socket.data.floodprotect.credit+')');

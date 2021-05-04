@@ -7,7 +7,7 @@ socket.on('connect', function() {
   socket.emit('name','twitter');
   socket.emit('join','#twitter');
   socket.emit('info','twitter-bot following '+config.twitter_follow+'. Usage: /m #twitter lt [screen_name] [count]');
-  global_say=(m)=>{socket.emit('message',m,{rooms:['#twitter']})};
+  global_say=(m)=>{socket.emit('message',m.replace(/https?:\/\/[^\s]*/gi,'').replace(/[\n\r]/g,' '),{rooms:['#twitter']})};
 });
 
 socket.on('message', function(msg,meta) {
