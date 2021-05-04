@@ -11,7 +11,7 @@ socket.on('connect', function() {
 });
 
 socket.on('message', function(msg,meta) {
-	if (meta&&meta.rooms&&!meta.rooms.includes('#printer')) {
+	if (meta && meta.rooms && !meta.rooms.includes('#printer') && !meta.rooms.some((e)=>{return !e.startsWith('#')})) {
 		if (meta.name) {msg='('+meta.name+') '+msg};
 		msg=get_time()+' '+msg;
 	}
