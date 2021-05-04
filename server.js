@@ -29,6 +29,7 @@ const own_client_socket = require('socket.io-client')(config.socket_server_URL);
 own_client_socket.emit('info','Listening to https://[this_server]/m/[messagetext] and posting to '+default_room+'.');
 
 io.on('connection', (socket) => {
+	if (io.engine.clientsCount>50) {socket.disconnect();return}
 	let ip=socket['handshake']['headers']["x-real-ip"];
 	socket.emit('message','WELCOME #'+io.engine.clientsCount+(ip?' ('+ip+')':''));
 	//socket.join(default_room);
