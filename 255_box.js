@@ -6,7 +6,7 @@ var current_ip="";
 socket.on('connect', function() {
   console.log(new Date().toISOString()+' | '+socket.id)
   socket.emit('name','box');
-  socket.emit('join','#box');
+  socket.emit('join',['#box'].concat(Array.isArray(config.printer_rooms)?config.printer_rooms:[]));
   socket.emit('info','This is the box. Usage: /m #box drucker an/aus | licht an/aus | beep an/aus | beep [count] | bssid | essid | sudoku | sudokunew | shplst [id] | liga [bl1|bl2] [tabelle|spiele|check|update]');
   global_say=(m)=>{socket.emit('message',m,{rooms:['#box']})};
 });
