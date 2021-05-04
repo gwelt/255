@@ -66,6 +66,7 @@ RKIDATA.prototype.update = function(RKI_dataset) {
 	this.db = this.db.filter((e)=>{return e.rki_data_status.Datum!==RKI_dataset.rki_data_status.Datum});
 	this.db.push(RKI_dataset);
 	socket.emit('message','Inzidenzwert '+this.get_Land_by_AdmUnitId(2)+': '+this.Inz7T(2)+' ('+this.Inz7T_diff_prev_day(2)+')',{rooms:['#broadcast']})
+	socket.emit('message','\n'+bigNumber(this.Inz7T(2))+'\n',{rooms:['#printer']})
 	while (this.db.length>7) {this.db.shift()};
 }
 
@@ -106,3 +107,69 @@ rki.get_rki_admunit();
 rki.check(); // check RKI-data at startup
 setInterval(function(){rki.check()},3*60*60*1000); // and then check RKI-data every 3 hours
 
+function bigNumber(i,space,width,delimiter) {
+let bn=`
+ 0000
+00  00
+00  00
+00  00
+ 0000
+
+1111
+  11
+  11
+  11
+111111
+
+ 2222
+22  22
+   22
+  22
+222222
+
+ 3333
+33  33
+   333
+33  33
+ 3333
+
+44  44
+44  44
+444444
+    44
+    44
+
+555555
+55
+55555
+    55
+55555
+
+ 6666
+66
+66666
+66  66
+ 6666
+
+777777
+   77
+  77
+ 77
+77
+
+ 8888
+88  88
+ 8888
+88  88
+ 8888
+
+ 9999
+99  99
+ 99999
+    99
+ 9999
+`.split('\n');
+  space=space||1;width=width||32;delimiter=delimiter||'\n';let a=Math.round(i).toString().split('');let w=Math.max(...bn.map(n=>n.length));let r='';
+  for (let y=0;y<5;y++) {r+=''.padEnd((width-(a.length*(w+space)-space))/2);a.forEach((n)=>{if (bn[n*6+y+1]) {r+=bn[n*6+y+1].padEnd(w+space)}});if (y<4) {r+=delimiter}} return r;
+}
+//console.log(bigNumber(190.6));
