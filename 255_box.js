@@ -12,9 +12,9 @@ socket.on('connect', function() {
 });
 
 socket.on('message', function(data,meta) {
+  lcd_show(data);
   if (meta&&meta.rooms&&meta.rooms.includes('#box')) {
     //print(data);
-    lcd_show(data);
     //if (/^--status$/i.test(data)) {global_say('DRUCKER:'+printer_is+' LICHT:'+light_is+' BEEP:'+beep_is)}
     if (/^drucker\ an$/i.test(data)) {printer_is='AN';global_say('          DRUCKER AN '+get_time(1))}
     if (/^drucker\ aus$/i.test(data)) {printer_is='AUS';global_say('          DRUCKER AUS '+get_time(1))}
