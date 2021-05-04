@@ -67,9 +67,9 @@ function handle_command(socket,msg,meta) {
 			} else {
 				let me='You are: '+socket.data.name+' | '+socket.id;
 				let all_users_ids=s2.length+' users in total.'; //: '+s2.map((e)=>{return e.id}).join(', ');
-				let humans=s2.filter((e)=>{return e.data.name&&!e.data.info}).sort((a,b)=>{return a.data.name.localeCompare(b.data.name)});
+				let humans=s2.filter((e)=>{return e.data.name&&!e.data.info}).sort((a,b)=>{if (a.data.name>b.data.name){return 1} if (b.data.name>a.data.name){return -1} return 0});
 				humans=(humans.length?humans.length:'No')+' users with a meaningful name'+(humans.length?': ':'.')+humans.map((e)=>{return e.data.name}).join(', ');
-				let services=s2.filter((e)=>{return e.data.info}).sort((a,b)=>{return a.data.name.localeCompare(b.data.name)});
+				let services=s2.filter((e)=>{return e.data.info}).sort((a,b)=>{if (a.data.name>b.data.name){return 1} if (b.data.name>a.data.name){return -1} return 0});
 				services=(services.length?services.length:'No')+' services'+(services.length?': ':'.')+services.reduce((a,c)=>{return a+'\n'+c.data.name+' | '+c.data.info},'');
 				socket.emit('message',me+'\n'+all_users_ids+'\n'+humans+'\n'+services);
 			}
@@ -86,9 +86,9 @@ function handle_command(socket,msg,meta) {
 					return {id:e.id,rooms:[...e.rooms].filter((e)=>{return e.startsWith('#')}),data:e.data}
 				}); 
 				let all_users_ids=s2.length+' users in room '+rooms[2]+'.'; //+': '+s2.map((e)=>{return e.id}).join(', ');
-				let humans=s2.filter((e)=>{return e.data.name&&!e.data.info}).sort((a,b)=>{return a.data.name.localeCompare(b.data.name)});
+				let humans=s2.filter((e)=>{return e.data.name&&!e.data.info}).sort((a,b)=>{if (a.data.name>b.data.name){return 1} if (b.data.name>a.data.name){return -1} return 0});
 				humans=(humans.length?humans.length:'No')+' users with a meaningful name'+(humans.length?': ':'.')+humans.map((e)=>{return e.data.name}).join(', ');
-				let services=s2.filter((e)=>{return e.data.info}).sort((a,b)=>{return a.data.name.localeCompare(b.data.name)});
+				let services=s2.filter((e)=>{return e.data.info}).sort((a,b)=>{if (a.data.name>b.data.name){return 1} if (b.data.name>a.data.name){return -1} return 0});
 				services=(services.length?services.length:'No')+' services'+(services.length?': ':'.')+services.reduce((a,c)=>{return a+'\n'+c.data.name+' | '+c.data.info},'');
 				socket.emit('message',all_users_ids+'\n'+humans+'\n'+services);
 				//socket.emit('message',s2.length+' users in room '+rooms[2]+': '+JSON.stringify(s2));
