@@ -16,7 +16,7 @@ socket.on('message', function(msg,meta) {
 			if (inz[1]=='i') {
 				socket.emit('message',rki.Inz7T(inz[3]),{rooms:[(meta?meta.sender:undefined)]});
 			} else {
-				socket.emit('message','Inzidenzwert '+(rki.get_Land_by_AdmUnitId(inz[3])||inz[3])+': '+rki.Inz7T(inz[3])+' ('+rki.Inz7T_diff_prev_day(inz[3])+')'+'\n'+bigNumber(rki.Inz7T(2),2)+'\n',{rooms:[(meta?meta.sender:undefined)]});
+				socket.emit('message','Inzidenzwert '+(rki.get_Land_by_AdmUnitId(inz[3])||inz[3])+': '+rki.Inz7T(inz[3])+' ('+rki.Inz7T_diff_prev_day(inz[3])+')'+'\n'+bigNumber(rki.Inz7T(inz[3]),2)+'\n',{rooms:[(meta?meta.sender:undefined)]});
 			}
 		} else {
 			socket.emit('message',JSON.stringify(rki.Inz7T()),{rooms:[(meta?meta.sender:undefined)]});
