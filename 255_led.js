@@ -15,8 +15,10 @@ socket.on('message', function(msg,meta) {
   } else {
     if (meta&&meta.rooms&&meta.rooms.includes('#led')) {
       current_color=randCol();
+      socket.emit('message','Ok. How do you like #'+current_color+'?',{rooms:[(meta?meta.sender:undefined)]});
     };
   }
+  socket.emit('info','LED showing the requested colour. Currently showing beautiful #'+current_color+'. Example: /m #led #ff00ff');
   blinkLED();
 });
 
