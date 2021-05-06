@@ -10,7 +10,7 @@ socket.on('connect', function() {
 
 socket.on('message', function(msg,meta) {
   if (meta&&meta.rooms&&meta.rooms.includes('#ping')) {
-	if (/^ping$/i.test(msg)) {socket.emit('message','Pong to you, '+((meta&&meta.name)?meta.name:'unnamed user')+'.',{rooms:[(meta?meta.sender:undefined)]})}
+  	if (/^ping$/i.test(msg)) {socket.emit('message','Pong to you, '+((meta&&meta.name)?meta.name:'unnamed user')+'.',{rooms:[(meta?meta.sender:undefined)]})}
   }
 });
 

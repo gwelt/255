@@ -1,0 +1,58 @@
+var config = require('./config.json');
+const socket = require('socket.io-client')(config.socket_server_URL);
+
+socket.on('connect', function() {
+  console.log(new Date().toISOString()+' | '+socket.id)
+  socket.emit('name','led');
+  socket.emit('join','#led');
+  socket.emit('info','LED showing the requested colour. Usage: /m #led #ff00ff');
+});
+
+socket.on('message', function(msg,meta) {
+  if (meta&&meta.rooms&&meta.rooms.includes('#led')) {
+    let c=(/^(#[0-9a-f]{6})$/i.exec(msg)); if (c) {
+      socket.emit('message','Ok. Colour is '+c[1]+' now.',{rooms:[(meta?meta.sender:undefined)]});
+    }
+  }
+});
+
+var Gpio = require('onoff').Gpio;
+var LED = new Gpio(17, 'out');
+var ws281x = require('./node_modules/rpi-ws281x-native/lib/ws281x-native');
+var NUM_LEDS = parseInt(process.argv[2], 10) || config.NUM_LEDS || 16,
+    pixelData = new Uint32Array(NUM_LEDS);
+ws281x.init(NUM_LEDS);
+process.on('SIGINT', function () {ws281x.reset(); process.nextTick(function () { process.exit(0); });});
+
+var current_color='0080ff';
+set_color(current_color,NUM_LEDS);
+
+function rgb2Int(r, g, b) {return ((r & 0xff) << 16) + ((g & 0xff) << 8) + (b & 0xff)}
+function hex2Int(hex) {var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex); return result ? rgb2Int(parseInt(result[1],16),parseInt(result[2],16),parseInt(result[3],16)) : null;}
+
+function set_color(colorcode,length) {
+  for(var i = 1; i <= NUM_LEDS; i++) {
+    pixelData[NUM_LEDS-i] = pixelData[NUM_LEDS-i-length] || hex2Int(colorcode);
+  }
+  ws281x.render(pixelData);
+}
+
+var animation;
+function push_color_array(color_array,delay) {
+  clearInterval(animation);
+  var counter=0;
+  animation = setInterval(function(){
+    if (counter<color_array.length+NUM_LEDS) {
+      set_color(color_array[counter]||current_color,1);
+    } else {
+      clearInterval(animation);
+    }
+    counter++;
+  },delay);
+}
+
+function blinkLED() {
+    push_color_array(['303030',,'808080',,'303030'],50);
+    LED.writeSync(1);
+    setTimeout(()=>{LED.writeSync(0)}, 320);
+}
