@@ -16,7 +16,7 @@ socket.on('message', function(msg,meta) {
 			if (inz[1]=='i') {
 				socket.emit('message',rki.Inz7T(inz[3]),{rooms:[(meta?meta.sender:undefined)]});
 			} else {
-				socket.emit('message','Inzidenzwert '+(rki.get_Land_by_AdmUnitId(inz[3])||inz[3])+': '+rki.Inz7T(inz[3])+' ('+rki.Inz7T_diff_prev_day(inz[3])+')',{rooms:[(meta?meta.sender:undefined)]});
+				socket.emit('message','Inzidenzwert '+(rki.get_Land_by_AdmUnitId(inz[3])||inz[3])+': '+rki.Inz7T(inz[3])+' ('+rki.Inz7T_diff_prev_day(inz[3])+')'+'\n'+bigNumber(rki.Inz7T(inz[3]),2)+'\n',{rooms:[(meta?meta.sender:undefined)]});
 			}
 		} else {
 			socket.emit('message',JSON.stringify(rki.Inz7T()),{rooms:[(meta?meta.sender:undefined)]});
@@ -65,8 +65,8 @@ RKIDATA.prototype.check = function() {
 RKIDATA.prototype.update = function(RKI_dataset) {
 	this.db = this.db.filter((e)=>{return e.rki_data_status.Datum!==RKI_dataset.rki_data_status.Datum});
 	this.db.push(RKI_dataset);
-	socket.emit('message','Inzidenzwert '+this.get_Land_by_AdmUnitId(2)+': '+this.Inz7T(2)+' ('+this.Inz7T_diff_prev_day(2)+')',{rooms:['#broadcast']})
-	socket.emit('message','\n'+bigNumber(this.Inz7T(2))+'\n',{rooms:['#printer']})
+	socket.emit('message','Inzidenzwert '+this.get_Land_by_AdmUnitId(2)+': '+this.Inz7T(2)+' ('+this.Inz7T_diff_prev_day(2)+')'+'\n'+bigNumber(this.Inz7T(2),2)+'\n',{rooms:['#broadcast']})
+	//socket.emit('message','\n'+bigNumber(this.Inz7T(2),2)+'\n',{rooms:['#printer']})
 	while (this.db.length>7) {this.db.shift()};
 }
 
