@@ -10,8 +10,12 @@ socket.on('connect', function() {
 
 socket.on('message', function(msg,meta) {
   let c=(/^#([0-9a-f]{6})$/i.exec(msg)); if (c) {
-    socket.emit('message','Ok. Colour is #'+c[1]+' now.',{rooms:[(meta?meta.sender:undefined)]});
     current_color=c[1];
+    socket.emit('message','Ok. Colour is #'+current_color+' now.',{rooms:[(meta?meta.sender:undefined)]});
+  } else {
+    if (meta&&meta.rooms&&meta.rooms.includes('#led')) {
+      current_color=randCol();
+    };
   }
   blinkLED();
 });
@@ -29,6 +33,7 @@ set_color(current_color,NUM_LEDS);
 
 function rgb2Int(r, g, b) {return ((r & 0xff) << 16) + ((g & 0xff) << 8) + (b & 0xff)}
 function hex2Int(hex) {var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex); return result ? rgb2Int(parseInt(result[1],16),parseInt(result[2],16),parseInt(result[3],16)) : null;}
+function randCol() {var c='0123456789ABCDEF'; var r=''; for (var i=0;i<6;i++) {r+=c[Math.floor(Math.random()*16)];} return r;}
 
 function set_color(colorcode,length) {
   for(var i = 1; i <= NUM_LEDS; i++) {
