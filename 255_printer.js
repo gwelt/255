@@ -11,17 +11,23 @@ socket.on('connect', function() {
 });
 
 socket.on('message', function(msg,meta) {
+	// RKI SPECIAL
+	let inz=(/^(Inz7T)(\ )?(.*)$/i.exec(msg)); if (inz) {socket.emit('message',msg,{rooms:['#rki']})};
+
 	if (meta && meta.rooms && !meta.rooms.includes('#printer') && !meta.rooms.some((e)=>{return !e.startsWith('#')})) {
 		if (meta.name) {msg='('+meta.name+') '+msg};
 		msg=get_time()+' '+msg;
 	}
+
 	ttyS0_print(msg);
 });
 
 function ttyS0_print(msg) {
 	var mapUmlaute = {ä:"ae",ü:"ue",ö:"oe",Ä:"Ae",Ü:"Ue",Ö:"Oe",ß:"ss"};
+	msg=msg.replace(/[äüöÄÜÖß]/g,function(m){return mapUmlaute[m]}).slice(0,1024);
+	//msg=unescape(msg).replace(/[^\w\s\däüöÄÜÖß\.,'!\@#$^&%*()\+=\-\[\]\/{}\|:\?]/g,'');
 	//msg=msg.replace(/\ {2,}/g," ");
-	msg=msg.replace(/[äüöÄÜÖß]/g,function(m){return mapUmlaute[m]}).slice(0,256);
+	msg=msg.replace(/"/g,'\'');
 	require('child_process').execSync('echo "'+msg+'" > /dev/ttyS0','e');
 }
 
