@@ -4,16 +4,16 @@ const socket = require('socket.io-client')(config.socket_server_URL);
 socket.on('connect', function() {
   console.log(new Date().toISOString()+' | '+socket.id)
   socket.emit('name','led');
-  socket.emit('join','#led');
-  socket.emit('info','LED showing the requested colour. Usage: /m #led #ff00ff');
+  socket.emit('join',['#led','#broadcast','#twitter','#printer']);
+  socket.emit('info','LED showing the requested colour. Example: /m #led #ff00ff');
 });
 
 socket.on('message', function(msg,meta) {
-  if (meta&&meta.rooms&&meta.rooms.includes('#led')) {
-    let c=(/^(#[0-9a-f]{6})$/i.exec(msg)); if (c) {
-      socket.emit('message','Ok. Colour is '+c[1]+' now.',{rooms:[(meta?meta.sender:undefined)]});
-    }
+  let c=(/^#([0-9a-f]{6})$/i.exec(msg)); if (c) {
+    socket.emit('message','Ok. Colour is #'+c[1]+' now.',{rooms:[(meta?meta.sender:undefined)]});
+    current_color=c[1];
   }
+  blinkLED();
 });
 
 var Gpio = require('onoff').Gpio;
@@ -24,7 +24,7 @@ var NUM_LEDS = parseInt(process.argv[2], 10) || config.NUM_LEDS || 16,
 ws281x.init(NUM_LEDS);
 process.on('SIGINT', function () {ws281x.reset(); process.nextTick(function () { process.exit(0); });});
 
-var current_color='0080ff';
+var current_color='50c050';
 set_color(current_color,NUM_LEDS);
 
 function rgb2Int(r, g, b) {return ((r & 0xff) << 16) + ((g & 0xff) << 8) + (b & 0xff)}
