@@ -11,14 +11,13 @@ socket.on('connect', function() {
 });
 
 socket.on('message', function(msg,meta) {
-	// RKI SPECIAL
-	let inz=(/^(Inz7T)(\ )?(.*)$/i.exec(msg)); if (inz) {socket.emit('message',msg,{rooms:['#rki']})};
+	// special: routing to rki (which replies with a personal message that will then be printed)
+	let inz=(/^(Inz7T)(\ )?(.*)?$/i.exec(msg)); if (inz) {socket.emit('message',msg,{rooms:['#rki']}); return};
 
 	if (meta && meta.rooms && !meta.rooms.includes('#printer') && !meta.rooms.some((e)=>{return !e.startsWith('#')})) {
 		if (meta.name) {msg='('+meta.name+') '+msg};
 		msg=get_time()+' '+msg;
 	}
-
 	ttyS0_print(msg);
 });
 

@@ -14,15 +14,21 @@ socket.on('message', function(msg,meta) {
 	let inz=(/^(Inz7T|Inzidenz|inz|i)(\ )?(.*)$/i.exec(msg)); if (inz) {
 		if ((inz[2])&&(inz[3])) {
 			if (inz[1]=='i') {
+				// just the requested number (no text, no diff-value)
 				socket.emit('message',rki.Inz7T(inz[3]),{rooms:[(meta?meta.sender:undefined)]});
 			} else {
-				socket.emit('message','Inzidenzwert '+(rki.get_Land_by_AdmUnitId(inz[3])||inz[3])+': '+rki.Inz7T(inz[3])+' ('+rki.Inz7T_diff_prev_day(inz[3])+')'+'\n'+bigNumber(rki.Inz7T(inz[3]),2)+'\n',{rooms:[(meta?meta.sender:undefined)]});
-				setTrafficlightColor(rki.Inz7T(inz[3]));
+				// requested value with leading text and diff-value
+				socket.emit('message',(rki.get_Land_by_AdmUnitId(inz[3])||('ID'+inz[3]))+': '+rki.Inz7T(inz[3])+' ('+rki.Inz7T_diff_prev_day(inz[3])+')'+'\n'+bigNumber(rki.Inz7T(inz[3]),2)+'\n',{rooms:[(meta?meta.sender:undefined)]});
 			}
 		} else {
-			let formatted_output = rki.Inz7T().Inz7T.reduce((a,c)=>{return a+c.Land.replace(/ü/g,'ue').substr(0,17).padEnd(17)+' '+c.Inz7T+' ('+c.diff+')\n'},'\n');
-			socket.emit('message',formatted_output,{rooms:[(meta?meta.sender:undefined)]});
-			//socket.emit('message',JSON.stringify(rki.Inz7T()),{rooms:[(meta?meta.sender:undefined)]});
+			if (inz[1]=='i') {
+				// all key-data JSON
+				socket.emit('message',JSON.stringify(rki.Inz7T()),{rooms:[(meta?meta.sender:undefined)]});
+			} else {
+				// all key-data formatted
+				let formatted_output = rki.Inz7T().Inz7T.reduce((a,c)=>{return a+c.Land.replace(/ü/g,'ue').substr(0,17).padEnd(17)+' '+c.Inz7T+' ('+c.diff+')\n'},'\n');
+				socket.emit('message',formatted_output,{rooms:[(meta?meta.sender:undefined)]});
+			}
 		}
 	};
 	if (/^JSON|data|numbers$/i.test(msg)) {socket.emit('message',JSON.stringify(rki),{rooms:[(meta?meta.sender:undefined)]})};
@@ -68,8 +74,10 @@ RKIDATA.prototype.check = function() {
 RKIDATA.prototype.update = function(RKI_dataset) {
 	this.db = this.db.filter((e)=>{return e.rki_data_status.Datum!==RKI_dataset.rki_data_status.Datum});
 	this.db.push(RKI_dataset);
-	socket.emit('message','Inzidenzwert '+this.get_Land_by_AdmUnitId(2)+': '+this.Inz7T(2)+' ('+this.Inz7T_diff_prev_day(2)+')'+'\n'+bigNumber(this.Inz7T(2))+'\n',{rooms:['#broadcast']})
 	while (this.db.length>7) {this.db.shift()};
+	// Send these requests to room #printer. printer-bot(s) will postback "Inz7T"-requests to #rki, get the (updated) data via private message and print them.
+	socket.emit('message','Inz7T Hamburg',{rooms:['#printer']});
+	socket.emit('message','Inz7T',{rooms:['#printer']});
 }
 
 RKIDATA.prototype.Inz7T = function(AdmUnitId_or_LandName,days_back_in_history) {
@@ -108,13 +116,6 @@ var rki = new RKIDATA();
 rki.get_rki_admunit();
 rki.check(); // check RKI-data on startup
 setInterval(function(){rki.check()},3*60*60*1000); // and then check RKI-data every 3 hours
-
-
-// =====================================================================
-function setTrafficlightColor(val) {
-	//console.log((val>100)?'#ff0000':((val>35)?'#ffff00':'#00ff00'));
-} 
-// =====================================================================
 
 
 function bigNumber(i,space,width,delimiter) {
