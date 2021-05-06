@@ -5,21 +5,24 @@ socket.on('connect', function() {
 	console.log(new Date().toISOString()+' | '+socket.id)
 	socket.emit('name','rki');
 	socket.emit('join','#rki');
-	socket.emit('info','Frequently posting corona-numbers from rki.de to #broadcast. Serving data as JSON via private message on request. Usage: /m #rki help');
+	socket.emit('info','Frequently posting corona-numbers from rki.de to #broadcast. Serving data on request. Usage: /m #rki help');
 });
 
 socket.on('message', function(msg,meta) {
   if (meta&&meta.rooms&&meta.rooms.includes('#rki')) {
-	if (/^help|usage$/i.test(msg)) {socket.emit('message','Usage examples: /m #rki Inz7T Hamburg, /m #rki i Bremen, /m #rki Inz7T, /m #rki JSON',{rooms:[(meta?meta.sender:undefined)]})};		
+	if (/^help|usage$/i.test(msg)) {socket.emit('message','Usage examples: /m #rki Inz7T Hamburg, /m #rki Inz7T, /m #rki i Bremen, /m #rki JSON',{rooms:[(meta?meta.sender:undefined)]})};		
 	let inz=(/^(Inz7T|Inzidenz|inz|i)(\ )?(.*)$/i.exec(msg)); if (inz) {
 		if ((inz[2])&&(inz[3])) {
 			if (inz[1]=='i') {
 				socket.emit('message',rki.Inz7T(inz[3]),{rooms:[(meta?meta.sender:undefined)]});
 			} else {
 				socket.emit('message','Inzidenzwert '+(rki.get_Land_by_AdmUnitId(inz[3])||inz[3])+': '+rki.Inz7T(inz[3])+' ('+rki.Inz7T_diff_prev_day(inz[3])+')'+'\n'+bigNumber(rki.Inz7T(inz[3]),2)+'\n',{rooms:[(meta?meta.sender:undefined)]});
+				setTrafficlightColor(rki.Inz7T(inz[3]));
 			}
 		} else {
-			socket.emit('message',JSON.stringify(rki.Inz7T()),{rooms:[(meta?meta.sender:undefined)]});
+			let formatted_output = rki.Inz7T().Inz7T.reduce((a,c)=>{return a+c.Land.substr(0,18).padEnd(18)+' '+c.Inz7T+' ('+c.diff+')\n'},'Inzidenzen Deutschland:\n');
+			socket.emit('message',formatted_output,{rooms:[(meta?meta.sender:undefined)]});
+			//socket.emit('message',JSON.stringify(rki.Inz7T()),{rooms:[(meta?meta.sender:undefined)]});
 		}
 	};
 	if (/^JSON|data|numbers$/i.test(msg)) {socket.emit('message',JSON.stringify(rki),{rooms:[(meta?meta.sender:undefined)]})};
@@ -27,11 +30,11 @@ socket.on('message', function(msg,meta) {
 });
 
 function RKIDATA() {
+	this.db = []; // array of RKI_dataset
+	this.rki_admunit = undefined;
 	this.URL_rki_data_status = 'https://services7.arcgis.com/mOBPykOjAyBO2ZKk/ArcGIS/rest/services/rki_data_status_v/FeatureServer/0/query?where=Status%3D%27OK%27&objectIds=&time=&resultType=standard&outFields=*&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&sqlFormat=standard&f=pjson&token=';
 	this.URL_rki_key_data = 'https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/rki_key_data_hubv/FeatureServer/0/query?where=AdmUnitId%20%3E%3D%200%20AND%20AdmUnitId%20%3C%3D%2099&outFields=AnzFall,AnzTodesfall,AnzFallNeu,AnzTodesfallNeu,AnzFall7T,Inz7T,AdmUnitId&returnGeometry=false&outSR=&f=json';
 	this.URL_rki_admunit = "https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/rki_admunit_v/FeatureServer/0/query?where=AdmUnitId%3C100&objectIds=&time=&resultType=standard&outFields=*&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&sqlFormat=none&f=pjson&token="
-	this.db = []; // array of RKI_dataset
-	this.rki_admunit = undefined;
 	return this;
 }
 
@@ -65,8 +68,7 @@ RKIDATA.prototype.check = function() {
 RKIDATA.prototype.update = function(RKI_dataset) {
 	this.db = this.db.filter((e)=>{return e.rki_data_status.Datum!==RKI_dataset.rki_data_status.Datum});
 	this.db.push(RKI_dataset);
-	socket.emit('message','Inzidenzwert '+this.get_Land_by_AdmUnitId(2)+': '+this.Inz7T(2)+' ('+this.Inz7T_diff_prev_day(2)+')'+'\n'+bigNumber(this.Inz7T(2),2)+'\n',{rooms:['#broadcast']})
-	//socket.emit('message','\n'+bigNumber(this.Inz7T(2),2)+'\n',{rooms:['#printer']})
+	socket.emit('message','Inzidenzwert '+this.get_Land_by_AdmUnitId(2)+': '+this.Inz7T(2)+' ('+this.Inz7T_diff_prev_day(2)+')'+'\n'+bigNumber(this.Inz7T(2))+'\n',{rooms:['#broadcast']})
 	while (this.db.length>7) {this.db.shift()};
 }
 
@@ -104,8 +106,16 @@ function getObjbyURL(URL,callback) {require('node-fetch')(URL,{method:'get'}).ca
 
 var rki = new RKIDATA();
 rki.get_rki_admunit();
-rki.check(); // check RKI-data at startup
+rki.check(); // check RKI-data on startup
 setInterval(function(){rki.check()},3*60*60*1000); // and then check RKI-data every 3 hours
+
+
+// =====================================================================
+function setTrafficlightColor(val) {
+	//console.log((val>100)?'#ff0000':((val>35)?'#ffff00':'#00ff00'));
+} 
+// =====================================================================
+
 
 function bigNumber(i,space,width,delimiter) {
 let bn=`
@@ -169,7 +179,7 @@ let bn=`
     99
  9999
 `.split('\n');
-  space=space||1;width=width||32;delimiter=delimiter||'\n';let a=Math.round(i).toString().split('');let w=Math.max(...bn.map(n=>n.length));let r='';
+  space=space||2;width=width||32;delimiter=delimiter||'\n';let a=Math.round(i).toString().split('');let w=Math.max(...bn.map(n=>n.length));let r='';
   for (let y=0;y<5;y++) {r+=''.padEnd((width-(a.length*(w+space)-space))/2);a.forEach((n)=>{if (bn[n*6+y+1]) {r+=bn[n*6+y+1].padEnd(w+space)}});if (y<4) {r+=delimiter}} return r;
 }
 //console.log(bigNumber(190.6));
