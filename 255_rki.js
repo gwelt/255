@@ -20,7 +20,7 @@ socket.on('message', function(msg,meta) {
 				setTrafficlightColor(rki.Inz7T(inz[3]));
 			}
 		} else {
-			let formatted_output = rki.Inz7T().Inz7T.reduce((a,c)=>{return a+c.Land.substr(0,18).padEnd(18)+' '+c.Inz7T+' ('+c.diff+')\n'},'Inzidenzen Deutschland:\n');
+			let formatted_output = rki.Inz7T().Inz7T.reduce((a,c)=>{return a+c.Land.replace(/ü/g,'ue').substr(0,17).padEnd(17)+' '+c.Inz7T+' ('+c.diff+')\n'},'\n');
 			socket.emit('message',formatted_output,{rooms:[(meta?meta.sender:undefined)]});
 			//socket.emit('message',JSON.stringify(rki.Inz7T()),{rooms:[(meta?meta.sender:undefined)]});
 		}
