@@ -19,6 +19,7 @@ socket.on('message', function(msg,meta) {
 			} else {
 				// requested value with leading text and diff-value and BIG-number
 				socket.emit('message',(rki.get_Land_by_AdmUnitId(inz[3])||('ID'+inz[3]))+': '+rki.Inz7T(inz[3])+' ('+rki.Inz7T_diff_prev_day(inz[3])+')'+'\n'+bigNumber(rki.Inz7T(inz[3]),2)+'\n',{rooms:[(meta?meta.sender:undefined)]});
+				let i=rki.Inz7T(inz[3]); socket.emit('message',(i>=100)?'#ff0000':((i>=50)?'#ffff00':'#00ff00'),{rooms:['#led']});
 			}
 		} else {
 			if (inz[1]=='i') {
