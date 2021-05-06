@@ -17,7 +17,7 @@ socket.on('message', function(msg,meta) {
 				// just the requested number (no text, no diff-value)
 				socket.emit('message',rki.Inz7T(inz[3]),{rooms:[(meta?meta.sender:undefined)]});
 			} else {
-				// requested value with leading text and diff-value
+				// requested value with leading text and diff-value and BIG-number
 				socket.emit('message',(rki.get_Land_by_AdmUnitId(inz[3])||('ID'+inz[3]))+': '+rki.Inz7T(inz[3])+' ('+rki.Inz7T_diff_prev_day(inz[3])+')'+'\n'+bigNumber(rki.Inz7T(inz[3]),2)+'\n',{rooms:[(meta?meta.sender:undefined)]});
 			}
 		} else {
@@ -180,7 +180,7 @@ let bn=`
     99
  9999
 `.split('\n');
-  space=space||2;width=width||32;delimiter=delimiter||'\n';let a=Math.round(i).toString().split('');let w=Math.max(...bn.map(n=>n.length));let r='';
+  space=space||2;width=width||32;delimiter=delimiter||'\n';let a=Math.round(i).toString().split('');let w=Math.max(...bn.map(n=>n.length));let r='\n';
   for (let y=0;y<5;y++) {r+=''.padEnd((width-(a.length*(w+space)-space))/2);a.forEach((n)=>{if (bn[n*6+y+1]) {r+=bn[n*6+y+1].padEnd(w+space)}});if (y<4) {r+=delimiter}} return r;
 }
 //console.log(bigNumber(190.6));
