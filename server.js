@@ -52,7 +52,7 @@ function safe_text(text) {if (text) {return unescape(text).replace(/[^\w\s\däü
 
 function handle_command(socket,msg,meta) {
 	//if (/^\/restart$/i.test(msg)) {socket.emit('message','Ok. Restarting.');setTimeout(function(){process.exit()},3000)}
-	if (/^\/help/i.test(msg)) {socket.emit('message','help: /nick [name] | /join [room] | /leave [room] | /rooms ([room]) | /users | /whois [name] | /m [room] [message] | /kick [id]')}
+	if (/^\/help/i.test(msg)) {socket.emit('message','help: /nick [name] | /join [room] | /leave [room] | /rooms ([room]) | /users | /whois [name] | /m [room] [message] | [#room] [message] | /kick [id]')}
 	let name=(/^\/(name|nick|n)\ ([^\ ]*)$/i.exec(msg)); if (name) {socket.data.name=safe_text(name[2]); socket.emit('message','You are now known as '+socket.data.name+'.')};
 	let join=(/^\/(join|j)\ ([^\ ]*)$/i.exec(msg)); if (join) {socket.join(join[2]); socket.emit('message','You are joining '+join[2]+' now.')};
 	let leave=(/^\/(leave|l)\ ([^\ ]*)$/i.exec(msg)); if (leave) {socket.leave(leave[2]); socket.emit('message','You left '+leave[2]+'.')};
@@ -114,6 +114,11 @@ function handle_command(socket,msg,meta) {
 }
 
 function forward_message(socket,msg,meta) {
+	// shortcut-handling of "[room] [message]" if [room] starts with '#' (long = "/m [room] [message]")
+	let message_to_room=(/^(#[^\s]*)\ (.*)$/i.exec(msg)); if (message_to_room&&message_to_room[2]) {
+		msg=message_to_room[2];
+		meta={rooms:[safe_text(message_to_room[1])]};
+	};
 	// if no rooms are given in meta, send to default_room only
 	if ( !((meta&&meta.rooms) && (Array.isArray(meta.rooms)) && (meta.rooms.length>0)) ) {
 		meta=meta||{};
