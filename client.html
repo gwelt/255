@@ -20,7 +20,7 @@
 <body>
 
 	<ul id=tweet></ul><div style=height:50px></div>
-	<form action=javascript:void(0); onsubmit=send_message(document.getElementById('message').value)><input id='message' autocomplete='off' type='text'></form>
+	<form action=javascript:void(0); onsubmit=send_message()><input id='message' autocomplete='off' type='text'></form>
 
 	<script>
 	var socket=false;
@@ -37,7 +37,7 @@
 	if (useSocketIO) {setTimeout(function(){SocketIO()},0)};
 	function SocketIO() {if (!socket) {loadScript('/socket.io/socket.io.js', function() {
 		socket=io();
-		socket.on('connect', function () {socket_id=socket.id;socket.emit('join','#broadcast')});
+		socket.on('connect', function () {socket_id=socket.id;socket.emit('join',['#broadcast','#twitter'])});
 		socket.on('message', function (msg,meta) {
 			if (meta) {tweet('tweet',msg,(meta&&meta.name)?meta.name:undefined,(meta&&meta.rooms)?meta.rooms:undefined)} else {tweet('tweet',msg)}
 		});
@@ -45,11 +45,14 @@
 		document.getElementById('message').focus();
 	})}};
 
-	function send_message(m) {
+	var send_message_element=document.getElementById('message');
+	function send_message() {
+		let m=send_message_element.value;
 		if (m) {
-			if (socket) {socket.emit('message',m)} 
-			else {var req = new XMLHttpRequest(); var hostname_port=location.hostname+":3000/255"; req.open('GET','http://'+hostname_port+'/m/'+m); req.send(); alert('Message delivered.')}
-			document.getElementById('message').value=""; document.getElementById('message').focus();
+			if (socket) {socket.emit('message',m)};
+			h.add(m);
+			send_message_element.value='';
+			send_message_element.focus();
 		}
 	}
 	
@@ -80,8 +83,42 @@
 		document.getElementById(ul_element).appendChild(node);
 		window.scrollTo(0,document.body.scrollHeight);
 	}
+
+	var h=new History();
+	function History(maxsize) {
+		this.h = []; // array of strings
+		this.current_history_position=0;
+		this.maxsize=maxsize||25;
+		return this;
+	}
+	History.prototype.add = function(s) {
+		this.h.push(s);
+		while (this.h.length>this.maxsize) {this.h.shift()};
+		this.current_history_position=this.h.length;
+	};
+	History.prototype.get = function(shift) {
+		this.current_history_position+=shift;
+		this.current_history_position=Math.min(Math.max(this.current_history_position,0),this.h.length-1);
+		send_message_element.value=this.h[this.current_history_position];
+		send_message_element.focus();
+	};
+
+	var keyset=[38,40,27];
+	document.onkeydown = function(event) {
+	  if (keyset.indexOf(event.keyCode)>=0) {
+	    switch (event.keyCode) {
+	      case 38: h.get(-1); break; // UP
+	      case 40: h.get(1); break; // DOWN
+	      case 27: send_message_element.value=''; send_message_element.focus(); break; // ESC
+	    }
+	    event.cancelBubble = true;
+	    event.returnValue = false;
+	  }
+	  return event.returnValue;
+	}
 	
 	</script>
 
 </body>
 </html>
+
