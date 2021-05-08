@@ -16,19 +16,19 @@ socket.on('message', function(data,meta) {
   if (meta&&meta.rooms&&meta.rooms.includes('#box')) {
     //print(data);
     //if (/^--status$/i.test(data)) {global_say('DRUCKER:'+printer_is+' LICHT:'+light_is+' BEEP:'+beep_is)}
-    if (/^drucker\ an$/i.test(data)) {printer_is='AN';global_say('          DRUCKER AN '+get_time(1))}
-    if (/^drucker\ aus$/i.test(data)) {printer_is='AUS';global_say('          DRUCKER AUS '+get_time(1))}
-    if (/^licht\ an$/i.test(data)) {require('child_process').execSync(__dirname+'/sendElro -i 1 -u 23 -r 15 -t');global_say('          LICHT AN   '+get_time(1));light_is="AN"}
-    if (/^licht\ aus$/i.test(data)) {require('child_process').execSync(__dirname+'/sendElro -i 1 -u 23 -r 15 -f');global_say('          LICHT AUS  '+get_time(1));light_is="AUS"}
-    if (/^tv\ an$/i.test(data)) {require('child_process').execSync(__dirname+'/sendElro -i 2 -u 23 -r 15 -t');global_say('          TV AN      '+get_time(1));}
-    if (/^tv\ aus$/i.test(data)) {require('child_process').execSync(__dirname+'/sendElro -i 2 -u 23 -r 15 -f');global_say('          TV AUS     '+get_time(1));}
-    if (/^baum\ an$/i.test(data)) {require('child_process').execSync(__dirname+'/sendElro -i 3 -u 23 -r 15 -t');global_say('          BAUM AN    '+get_time(1));}
-    if (/^baum\ aus$/i.test(data)) {require('child_process').execSync(__dirname+'/sendElro -i 3 -u 23 -r 15 -f');global_say('          BAUM AUS   '+get_time(1));}
+    if (/^drucker\ an$/i.test(data)) {printer_is='AN';global_say('DRUCKER AN '+get_time(1))}
+    if (/^drucker\ aus$/i.test(data)) {printer_is='AUS';global_say('DRUCKER AUS '+get_time(1))}
+    if (/^licht\ an$/i.test(data)) {require('child_process').execSync(__dirname+'/sendElro -i 1 -u 23 -r 15 -t');global_say('LICHT AN '+get_time(1));light_is="AN"}
+    if (/^licht\ aus$/i.test(data)) {require('child_process').execSync(__dirname+'/sendElro -i 1 -u 23 -r 15 -f');global_say('LICHT AUS '+get_time(1));light_is="AUS"}
+    if (/^tv\ an$/i.test(data)) {require('child_process').execSync(__dirname+'/sendElro -i 2 -u 23 -r 15 -t');global_say('TV AN '+get_time(1));}
+    if (/^tv\ aus$/i.test(data)) {require('child_process').execSync(__dirname+'/sendElro -i 2 -u 23 -r 15 -f');global_say('TV AUS '+get_time(1));}
+    if (/^baum\ an$/i.test(data)) {require('child_process').execSync(__dirname+'/sendElro -i 3 -u 23 -r 15 -t');global_say('BAUM AN '+get_time(1));}
+    if (/^baum\ aus$/i.test(data)) {require('child_process').execSync(__dirname+'/sendElro -i 3 -u 23 -r 15 -f');global_say('BAUM AUS '+get_time(1));}
     if (/^bssid$/i.test(data)) {global_say(require('child_process').execSync('iwlist wlan0 scanning | grep -o ..:..:..:..:..:..',{stdio:'pipe'}).toString().replace(/[\r\n]/g,' '))}
     if (/^essid$/i.test(data)) {global_say(require('child_process').execSync("iwlist wlan0 scanning | grep ESSID",{stdio:'pipe'}).toString().replace(/\ /g,''))}
     let b=(/^beep\ (\d)$/i.exec(data)); if (b) {if (beep_is!='AUS') {beep(b[1],20,100)}};
-    if (/^beep\ an$/i.test(data)) {beep_is='AN';  global_say('           BEEP AN   '+get_time(1))}
-    if (/^beep\ aus$/i.test(data)) {beep_is='AUS';global_say('           BEEP AUS  '+get_time(1))}
+    if (/^beep\ an$/i.test(data)) {beep_is='AN';  global_say('BEEP AN '+get_time(1))}
+    if (/^beep\ aus$/i.test(data)) {beep_is='AUS';global_say('BEEP AUS '+get_time(1))}
     let shplst=(/^shplst\ ([^\ ]*)$/i.exec(data)); if (shplst) {global_say('PRINTING SHOPPINGLIST');get_shplst(shplst[1],'LIDL',send_to_printer)}
     let liga_all=(/^liga\ ([^\ ]*)$/i.exec(data)); if (liga_all) {
      	global_say('OK LIGA '+liga_all[1]);

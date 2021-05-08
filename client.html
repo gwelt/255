@@ -102,7 +102,6 @@
 		if (this.current_history_position==this.h.length) {this.temp=send_message_element.value};
 		this.current_history_position+=shift;
 		this.current_history_position=Math.min(Math.max(this.current_history_position,0),this.h.length);
-		
 		send_message_element.value=(this.current_history_position==this.h.length)?this.temp:this.h[this.current_history_position];
 		send_message_element.focus();
 	};
@@ -113,7 +112,6 @@
 	    switch (event.keyCode) {
 	      case 38: h.get(-1); break; // UP
 	      case 40: h.get(1); break; // DOWN
-	      //case 27: send_message_element.value=''; send_message_element.focus(); break; // ESC
 	    }
 	    event.cancelBubble = true;
 	    event.returnValue = false;
