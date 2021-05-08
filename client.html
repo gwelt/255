@@ -50,7 +50,7 @@
 		let m=send_message_element.value;
 		if (m) {
 			if (socket) {socket.emit('message',m)};
-			h.add(m);
+			h.add();
 			send_message_element.value='';
 			send_message_element.focus();
 		}
@@ -86,30 +86,34 @@
 
 	var h=new History();
 	function History(maxsize) {
-		this.h = ['']; // array of strings
+		this.h = []; // array of strings
 		this.current_history_position=0;
 		this.maxsize=maxsize||25;
+		this.temp='';
 		return this;
 	}
 	History.prototype.add = function(s) {
-		this.h.push(s);
+		this.h.push(s||send_message_element.value);
 		while (this.h.length>this.maxsize) {this.h.shift()};
+		this.temp='';
 		this.current_history_position=this.h.length;
 	};
 	History.prototype.get = function(shift) {
+		if (this.current_history_position==this.h.length) {this.temp=send_message_element.value};
 		this.current_history_position+=shift;
-		this.current_history_position=Math.min(Math.max(this.current_history_position,0),this.h.length-1);
-		send_message_element.value=this.h[this.current_history_position];
+		this.current_history_position=Math.min(Math.max(this.current_history_position,0),this.h.length);
+		
+		send_message_element.value=(this.current_history_position==this.h.length)?this.temp:this.h[this.current_history_position];
 		send_message_element.focus();
 	};
 
-	var keyset=[38,40,27];
+	var keyset=[38,40];
 	document.onkeydown = function(event) {
 	  if (keyset.indexOf(event.keyCode)>=0) {
 	    switch (event.keyCode) {
 	      case 38: h.get(-1); break; // UP
 	      case 40: h.get(1); break; // DOWN
-	      case 27: send_message_element.value=''; send_message_element.focus(); break; // ESC
+	      //case 27: send_message_element.value=''; send_message_element.focus(); break; // ESC
 	    }
 	    event.cancelBubble = true;
 	    event.returnValue = false;
