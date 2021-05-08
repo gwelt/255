@@ -125,19 +125,21 @@ function forward_message(socket,msg,meta) {
 		meta.rooms=[default_room];
 	}
 	if (meta.rooms.length>0) {
-		if (flood_protect(socket)) {
+		if (has_credit(socket)) {
 			// send message
 			let ioto=io; 
 			meta.rooms.forEach((r)=>{ioto=ioto.to(r)});
 			ioto.emit('message',safe_text(msg),{sender:socket.id,name:safe_text(socket.data.name),rooms:meta.rooms.filter((e)=>{return e.startsWith('#')})});
 		} else {
-			// send flood-protect-message to user
-			socket.emit('message','Easy there, Turbo. Too many requests recently. Enhance your calm. (credit: '+socket.data.floodprotect.credit+')');
+			// send flood-protect-message to user (but prevent endless-loop in case he answers this)
+			if (socket.data.floodprotect.credit>-50) {
+				socket.emit('message','Easy there, Turbo. Too many requests recently. Enhance your calm. (credit: '+socket.data.floodprotect.credit+')');
+			}
 		}
 	}
 }
 
-function flood_protect(socket) {
+function has_credit(socket) {
 	let fp=socket.data.floodprotect||{};
 	let t=new Date().getTime();
 	fp.timestamp=fp.timestamp||t;
