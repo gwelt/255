@@ -37,7 +37,7 @@ io.on('connection', (socket) => {
 	socket.data.network={address:socket['handshake']['headers']["x-real-ip"],port:socket['handshake']['headers']["x-real-port"],host:socket.handshake.headers.host,referer:socket.handshake.headers.referer,useragent:socket['handshake']['headers']['user-agent']};
 	socket.on('name', (name) => {socket.data.name=safe_text(name); socket.emit('message','You are now known as '+socket.data.name+'.')});
 	socket.on('info', (info) => {socket.data.info=safe_text(info); socket.emit('message','Info: '+socket.data.info)});
-	socket.on('join', (room) => {socket.join(room); socket.emit('message','You are joining '+room+' now.')});
+	socket.on('join', (room) => {socket.join(room); socket.emit('message','You are joining '+(Array.isArray(room)?room.join(', '):room)+' now.')});
 	socket.on('leave', (room) => {socket.leave(room); socket.emit('message','You left '+room+'.')});
 	socket.on('message', (msg,meta) => {
 		// handle command
