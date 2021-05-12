@@ -33,7 +33,9 @@ function start_streaming(delay) {
   if (stream!==false) {
     //process.nextTick(() => stream.destroy());
   }
-  global_say('CONNECT '+delay);
+  if (delay>256) {
+    global_say('CONNECT '+delay);
+  }
   stream = client.stream('statuses/filter', {follow: config.twitter_follow});
   //global_say(JSON.stringify(stream));
   stream.on('start', function(response) {
@@ -50,7 +52,7 @@ function start_streaming(delay) {
     global_say('ERROR '+JSON.stringify(error));
   });
   stream.on('end', function(reason) {
-    global_say('====== END ======');
+    //global_say('====== END ======');
     //global_say('END '+JSON.stringify(reason));
     if (delay<1000000) {
       setTimeout(()=>{start_streaming(delay*delay)},delay*1000);
