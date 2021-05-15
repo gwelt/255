@@ -4,7 +4,7 @@ const socket = require('socket.io-client')(config.socket_server_URL);
 socket.on('connect', function() {
   console.log(new Date().toISOString()+' | '+socket.id)
   socket.emit('name','led');
-  socket.emit('join',['#led','#broadcast','#twitter','#printer']);
+  socket.emit('join',['#led'].concat(Array.isArray(config.led_rooms)?config.led_rooms:[]));
   socket.emit('info','LED showing the requested colour. Example: /m #led #ff00ff');
 });
 
