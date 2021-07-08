@@ -14,7 +14,7 @@ socket.on('message', function(msg,meta) {
 	// special: routing to rki (which replies with a personal message that will then be printed)
 	let inz=(/^(Inz7T)(\ )?(.*)?$/i.exec(msg)); if (inz) {socket.emit('message',msg,{rooms:['#rki']}); return};
 
-	if (meta && meta.rooms && meta.rooms.length>0 && !meta.rooms.includes('#printer')) {
+	if (meta && meta.rooms && !meta.rooms.includes('#printer')) { // do not print timestamp/name on private message >> && meta.rooms.length>0
 		if (meta.name) {msg='('+meta.name+') '+msg};
 		msg=get_time()+' '+msg;
 	}
