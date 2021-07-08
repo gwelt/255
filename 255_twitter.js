@@ -12,11 +12,8 @@ socket.on('connect', function() {
 
 socket.on('message', function(msg,meta) {
   if (meta&&meta.rooms&&meta.rooms.includes('#twitter')) {
-    //if (/twitter-reconnect/i.test(msg)) {start_streaming(2);global_say('reconnecting')}
-    //if (/^twitter-status$/i.test(msg)) {global_say(JSON.stringify(stream))}
-    //if (/^--status$/i.test(msg)) {global_say('listening, '+JSON.stringify(stream))}
-    //if (/--help/i.test(msg)) {global_say('help: lt [screen_name] [count], twitter-reconnect, twitter-status')}
     var t=(/lt\ ([\w_]+)\ (\d)$/i.exec(msg)); if (t) {latest_tweet(t[1],t[2])}; //post latest tweets
+    var r=(/twitter_reset$/i.exec(msg)); if (r) {start_streaming(1)}; //reset
   }
 });
 
@@ -29,19 +26,12 @@ var client = new Twitter({
 });
 
 var stream = false;
+setTimeout(()=>{start_streaming(1)},2500);
+setInterval(()=>{start_streaming(1)},43200000*2); // reconnect every 12 *2 hours //
+
 function start_streaming(delay) {
-  if (stream!==false) {
-    //process.nextTick(() => stream.destroy());
-  }
-  if (delay>256) {
-    global_say('CONNECT '+delay);
-  }
+  if (delay>1) {global_say('CONNECT '+delay)} //
   stream = client.stream('statuses/filter', {follow: config.twitter_follow});
-  //global_say(JSON.stringify(stream));
-  stream.on('start', function(response) {
-    global_say('===== START =====');
-    //global_say('START '+JSON.stringify(response));
-  });
   stream.on('data', function(event) {
     if ((event.text)&&(!event.text.startsWith('RT'))&&(!event.text.startsWith('@'))) {
       global_say('@'+event.user.screen_name+': '+event.text);
@@ -52,24 +42,21 @@ function start_streaming(delay) {
     global_say('ERROR '+JSON.stringify(error));
   });
   stream.on('end', function(reason) {
-    //global_say('====== END ======');
-    //global_say('END '+JSON.stringify(reason));
+    global_say('====== END ======'); //
+    console.log('END '+JSON.stringify(reason)); //
     if (delay<1000000) {
-      setTimeout(()=>{start_streaming(delay*delay)},delay*1000);
+      //Seems like twitter is auto-reconnecting on END now... so maybe omit restart?
+      //setTimeout(()=>{start_streaming(delay*delay)},delay*1000);
     } else {global_say('= TWITTER END! =')}
   });
 }
-setTimeout(()=>{start_streaming(2)},2500);
-//setInterval(()=>{start_streaming(2)},43200000/2); // reconnect every 6 hours
+
 
 function latest_tweet(_screen_name,_count) {
   client.get('statuses/user_timeline', {screen_name: _screen_name, count:_count*3, include_rts:false, trim_user:true}, function(error, tweets, response) {
   if (!error) {
     tweets.forEach( (item,index) => {
       if (index<_count) {
-        //var hashtags=[];
-        //item.entities.hashtags.forEach( (item,index) => {hashtags.push(item.text)});
-        //console.log(item.created_at+': '+item.text)//+' ---> '+hashtags.toString())
         global_say('@'+_screen_name+': '+item.text);
       }
     });
