@@ -27,8 +27,8 @@ app.use(/^\/(255)?$/, function(req, res) {
 app.use('*', function(req, res) {res.sendStatus(404)});
 server.listen(config.socket_server_port||3000,()=>{console.log(new Date().toISOString()+' | SERVER STARTED, PORT: '+(config.socket_server_port||3000))});
 
-/*
 const own_client_socket = require('socket.io-client')(config.socket_server_URL);
+/*
 own_client_socket.emit('info','Listening to https://[this_server]/m/[messagetext] and posting to '+default_room+'.');
 */
 
