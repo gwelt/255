@@ -31,22 +31,22 @@ socket.on('message', function(data,meta) {
     if (/^beep\ aus$/i.test(data)) {beep_is='AUS';global_say('BEEP AUS '+get_time(1))}
     let shplst=(/^shplst\ ([^\ ]*)$/i.exec(data)); if (shplst) {global_say('PRINTING SHOPPINGLIST');get_shplst(shplst[1],'LIDL',send_to_printer)}
     let liga_all=(/^liga\ ([^\ ]*)$/i.exec(data)); if (liga_all) {
-     	global_say('OK LIGA '+liga_all[1]);
-    	if (liga_all[1]=='bl') {
-   	  	get_liga('bl1/check',(msg)=>{
-     			send_to_printer(msg);
-   	  		get_liga('bl1/print',(msg)=>{send_to_printer(msg)});		
-   		  	get_liga('bl2/check',(msg)=>{
-     				send_to_printer(msg);
-   		  		get_liga('bl2/print',(msg)=>{send_to_printer(msg)});		
-    	 	 	});
-   	  	});
-    	} else {
-   	  	get_liga(liga_all[1]+'/check',(msg)=>{
-     			send_to_printer(msg);
-   	  		get_liga(liga_all[1]+'/print',(msg)=>{send_to_printer(msg)});
-   	  	});
-    	}
+      global_say('OK LIGA '+liga_all[1]);
+      if (liga_all[1]=='bl') {
+        get_liga('bl1/check',(msg)=>{
+          send_to_printer(msg);
+          get_liga('bl1/print',(msg)=>{send_to_printer(msg)});    
+          get_liga('bl2/check',(msg)=>{
+            send_to_printer(msg);
+            get_liga('bl2/print',(msg)=>{send_to_printer(msg)});    
+          });
+        });
+      } else {
+        get_liga(liga_all[1]+'/check',(msg)=>{
+          send_to_printer(msg);
+          get_liga(liga_all[1]+'/print',(msg)=>{send_to_printer(msg)});
+        });
+      }
       let liga=(/^liga\ ([^\ ]*)\ ([^\ ]*)$/i.exec(data)); if (liga) {
         if ((liga[2]=='check')||(liga[2]=='update')) {global_say('OK LIGA '+liga[1]+' '+liga[2].toUpperCase());get_liga(liga[1]+'/'+liga[2],send_to_printer)}
         else {global_say('OK LIGA '+liga[1]+' PRINT');get_liga(liga[1]+'/print/'+liga[2],send_to_printer)}
