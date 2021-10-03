@@ -1,5 +1,5 @@
 var config = require('./config.json');
-const socket = require('socket.io-client')(config.socket_server_URL);
+const socket = require('socket.io-client')(config.socket_server_URL,{rejectUnauthorized:false});
 var global_say=()=>{};
 var current_ip="";
 
@@ -120,7 +120,7 @@ function get_shplst(id,shop,callback) {
     var res="";
     r.on('data', function(d) {res+=d}); 
     r.on('end', function() {callback(res)});
-  }).on('error',(e)=>{say('PRINTING SHPLST FAILED');console.log(e)})
+  }).on('error',(e)=>{global_say('PRINTING SHPLST FAILED');console.log(e)})
 }
 
 function get_liga(request,callback) {
@@ -128,7 +128,7 @@ function get_liga(request,callback) {
     var res="";
     r.on('data', function(d) {res+=d}); 
     r.on('end', function() {callback(res)});
-  }).on('error',(e)=>{say('PRINTING LIGA FAILED');console.log(e)})
+  }).on('error',(e)=>{global_say('PRINTING LIGA FAILED');console.log(e)})
 }
 
 function get_sudoku(request,callback) {
@@ -136,7 +136,7 @@ function get_sudoku(request,callback) {
     var res="";
     r.on('data', function(d) {res+=d}); 
     r.on('end', function() {callback(res)});
-  }).on('error',(e)=>{say('PRINTING SUDOKU FAILED');console.log(e)})
+  }).on('error',(e)=>{global_say('PRINTING SUDOKU FAILED');console.log(e)})
 }
 
 function send_to_printer(msg) {

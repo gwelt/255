@@ -1,5 +1,5 @@
 var config = require('./config.json');
-const socket = require('socket.io-client')(config.socket_server_URL);
+const socket = require('socket.io-client')(config.socket_server_URL,{rejectUnauthorized:false});
 require('child_process').execSync('stty -F /dev/ttyS0 9600');
 ttyS0_print("================================\\nIP: "+require('os').networkInterfaces()['wlan0'][0]['address']+" (wlan0)\\nSOCKET-SERVER: "+config.socket_server_URL+"\\n================================");
 

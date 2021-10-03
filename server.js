@@ -10,10 +10,12 @@ const default_room = '#broadcast';
 app.use(bodyParser.json({ strict: true }));
 app.use(function (error, req, res, next){next()}); // don't show error-message, if it's not JSON ... just ignore it
 app.use(bodyParser.urlencoded({ extended: true }));
+/*
 app.use('(/255)?/m/:m', function(req, res) { // 
 	if (req.params.m) {own_client_socket.emit('message',req.params.m,{rooms:[default_room]})};
 	res.send('ok');
 })
+*/
 app.use(/^\/(255)?$/, function(req, res) {
 	if ((req.method=='POST')&&(req.body)) {
 		if (req.body.message) {
@@ -25,8 +27,10 @@ app.use(/^\/(255)?$/, function(req, res) {
 app.use('*', function(req, res) {res.sendStatus(404)});
 server.listen(config.socket_server_port||3000,()=>{console.log(new Date().toISOString()+' | SERVER STARTED, PORT: '+(config.socket_server_port||3000))});
 
+/*
 const own_client_socket = require('socket.io-client')(config.socket_server_URL);
 own_client_socket.emit('info','Listening to https://[this_server]/m/[messagetext] and posting to '+default_room+'.');
+*/
 
 io.on('connection', (socket) => {
 	if (io.engine.clientsCount>50) {socket.disconnect();return}

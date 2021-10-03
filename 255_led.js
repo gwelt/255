@@ -1,5 +1,5 @@
 var config = require('./config.json');
-const socket = require('socket.io-client')(config.socket_server_URL);
+const socket = require('socket.io-client')(config.socket_server_URL,{rejectUnauthorized:false});
 
 socket.on('connect', function() {
   console.log(new Date().toISOString()+' | '+socket.id)
