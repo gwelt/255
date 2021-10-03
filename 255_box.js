@@ -116,7 +116,7 @@ function beep(times,duration,delay) {
 }
 
 function get_shplst(id,shop,callback) {
-  require('https').get({host:'gwelt.net', path:'/shp/?mode=escapedText&id='+id+'&shop='+shop}, function(r) {
+  require('https').get({host:'gwelt.net', path:'/shp/?mode=escapedText&id='+id+'&shop='+shop, rejectUnauthorized:false}, function(r) {
     var res="";
     r.on('data', function(d) {res+=d}); 
     r.on('end', function() {callback(res)});
@@ -124,7 +124,7 @@ function get_shplst(id,shop,callback) {
 }
 
 function get_liga(request,callback) {
-  require('https').get({host:'gwelt.net', path:'/liga/'+request}, function(r) {
+  require('https').get({host:'gwelt.net', path:'/liga/'+request, rejectUnauthorized:false}, function(r) {
     var res="";
     r.on('data', function(d) {res+=d}); 
     r.on('end', function() {callback(res)});
@@ -132,7 +132,7 @@ function get_liga(request,callback) {
 }
 
 function get_sudoku(request,callback) {
-  require('https').get({host:'gwelt.net', path:'/sudoku/'+request}, function(r) {
+  require('https').get({host:'gwelt.net', path:'/sudoku/'+request, rejectUnauthorized:false}, function(r) {
     var res="";
     r.on('data', function(d) {res+=d}); 
     r.on('end', function() {callback(res)});
