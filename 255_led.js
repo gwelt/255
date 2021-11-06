@@ -29,7 +29,7 @@ var NUM_LEDS = parseInt(process.argv[2], 10) || config.NUM_LEDS || 16,
 ws281x.init(NUM_LEDS);
 process.on('SIGINT', function () {ws281x.reset(); process.nextTick(function () { process.exit(0); });});
 
-var current_color='266DCA';
+var current_color='102040';
 set_color(current_color,NUM_LEDS);
 
 function rgb2Int(r, g, b) {return ((r & 0xff) << 16) + ((g & 0xff) << 8) + (b & 0xff)}

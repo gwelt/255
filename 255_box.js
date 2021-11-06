@@ -1,5 +1,6 @@
 var config = require('./config.json');
-const socket = require('socket.io-client')(config.socket_server_URL,{rejectUnauthorized:false});
+//const socket = require('socket.io-client')(config.socket_server_URL,{rejectUnauthorized:false});
+const socket = require('socket.io-client')(config.socket_server_URL);
 var global_say=()=>{};
 var current_ip="";
 
