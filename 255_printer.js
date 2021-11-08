@@ -5,7 +5,7 @@ ttyS0_print("================================\\nIP: "+require('os').networkInter
 
 socket.on('connect', function() {
 	console.log(new Date().toISOString()+' | '+socket.id);
-	ttyS0_print(get_time()+' CONNECTED');
+	socket.emit('message',socket.id,{rooms:[socket.id]});
 	socket.emit('name','printer');
 	socket.emit('join',['#printer'].concat(Array.isArray(config.printer_rooms)?config.printer_rooms:[]));
 	socket.emit('info','Messages to #printer will output on this thermal printer. Usage: /m #printer [text]');
