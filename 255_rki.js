@@ -182,6 +182,6 @@ let bn=`
  9999
 `.split('\n');
   space=space||2;width=width||32;delimiter=delimiter||'\n';let a=Math.round(i).toString().split('');let w=Math.max(...bn.map(n=>n.length));let r='\n';
-  for (let y=0;y<5;y++) {r+=''.padEnd((width-(a.length*(w+space)-space))/2);a.forEach((n)=>{if (bn[n*6+y+1]) {r+=bn[n*6+y+1].padEnd(w+space)}});if (y<4) {r+=delimiter}} return r;
+  for (let y=0;y<5;y++) {r+=''.padEnd((width-(a.length*(w+space)-space))/2);a.forEach((n)=>{if (bn[n*6+y+1]) {r+=bn[n*6+y+1].padEnd(w+space)}});if ((y<4)&&(a.length<4)) {r+=delimiter}} return r;
 }
-//console.log(bigNumber(190.6));
+//console.log(bigNumber(1901.6));
