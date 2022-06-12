@@ -1,8 +1,10 @@
 // use the API and send a POST-request
-const fetch = require('node-fetch')('http://localhost:3000/', {
+const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+const body = { message: 'Hello World via API!', rooms: ['#broadcast','#test']};
+const response = fetch('http://localhost:3000/', {
 	method: 'post',
-	body:    JSON.stringify({ message: 'Hello World via API!', rooms: ['#broadcast','#test']}),
-	headers: { 'Content-Type': 'application/json' }
+	body: JSON.stringify(body),
+	headers: {'Content-Type': 'application/json'}
 });
 
 // or open a socket - and close it after sending your message
