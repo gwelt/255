@@ -14,6 +14,8 @@ socket.on('connect', function() {
 
 socket.on('message', function(data,meta) {
   lcd_show(data);
+  //setTimeout(function(){lcd_show(data)},2000);
+
   if (meta&&meta.rooms&&meta.rooms.includes('#box')) {
     //print(data);
     //if (/^--status$/i.test(data)) {global_say('DRUCKER:'+printer_is+' LICHT:'+light_is+' BEEP:'+beep_is)}
@@ -117,6 +119,14 @@ function beep(times,duration,delay) {
 }
 
 function get_shplst(id,shop,callback) {
+  require('https').get({host:'gwelt.net', path:'/disk/shplst/'+id.toUpperCase()+'_list', rejectUnauthorized:false}, function(r) {
+    var res="";
+    r.on('data', function(d) {res+=d}); 
+    r.on('end', function() {try {res=JSON.parse(res).shplst} catch (e) {}; callback('\n'+res+'\n\n')});
+  }).on('error',(e)=>{global_say('PRINTING SHPLST FAILED');console.log(e)})
+}
+
+function get_shplst_old(id,shop,callback) {
   require('https').get({host:'gwelt.net', path:'/shp/?mode=escapedText&id='+id+'&shop='+shop, rejectUnauthorized:false}, function(r) {
     var res="";
     r.on('data', function(d) {res+=d}); 
@@ -148,7 +158,7 @@ function send_to_printer(msg) {
   var items = msg.split('\n');
   items.forEach( (i) => {var x=/###\ ([^\n]*)/.exec(i); if (x) {var c=(32-5-x[1].length); i+=' '; for (let y=0;y<c;y++) {i+='#'}; res+=i+'\n'} else {res+=i+'\n'}});
   var p=require('child_process');
-  p.execSync('stty -F '+printer+' '+baudrate);
+  //p.execSync('stty -F '+printer+' '+baudrate);
   p.execSync('echo "'+res+'" > '+printer,'e');
 }
 

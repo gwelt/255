@@ -1,7 +1,6 @@
 var config = require('./config.json');
 const socket = require('socket.io-client')(config.socket_server_URL,{rejectUnauthorized:false});
-require('child_process').execSync('stty -F /dev/ttyS0 9600');
-ttyS0_print("================================\\nIP: "+require('os').networkInterfaces()['wlan0'][0]['address']+" (wlan0)\\nSOCKET-SERVER: "+config.socket_server_URL+"\\n================================");
+//require('child_process').execSync('stty -F /dev/ttyS0 9600');
 
 socket.on('connect', function() {
 	console.log(new Date().toISOString()+' | '+socket.id);
@@ -19,8 +18,45 @@ socket.on('message', function(msg,meta) {
 		if (meta.name) {msg='('+meta.name+') '+msg};
 		msg=get_time()+' '+msg;
 	}
+	
 	ttyS0_print(msg);
+	//ttyS0.print(msg);
 });
+
+
+/* ttyS0 spooler */
+const ttyS0 = new ttyS0_Object();
+function ttyS0_Object() {
+	this.messages = [];
+	this.blocked = false;
+	this.exec = require('child_process').exec; //spawn, fork, exec, execSync 
+	this.interval = undefined;
+	this.delay = 1250;
+}
+ttyS0_Object.prototype.print = function(msg) {
+	var mapUmlaute = {ä:"ae",ü:"ue",ö:"oe",Ä:"Ae",Ü:"Ue",Ö:"Oe",ß:"ss"};
+	msg=msg.replace(/[äüöÄÜÖß]/g,function(m){return mapUmlaute[m]}).slice(0,1024);
+	//msg=unescape(msg).replace(/[^\w\s\däüöÄÜÖß\.,'!\@#$^&%*()\+=\-\[\]\/{}\|:\?]/g,'');
+	//msg=msg.replace(/\ {2,}/g," ");
+	msg=msg.replace(/"/g,'\'');
+	this.messages.push(msg);
+	if (!this.interval) {
+		this.exec('stty -F /dev/ttyS0 9600',function (error,stdout,stderr) {
+			ttyS0.interval = setInterval(()=>{ttyS0.spool()},100);
+		});
+	};
+}
+ttyS0_Object.prototype.spool = function() {
+	if (!this.messages.length) {clearInterval(this.interval);this.interval=undefined;}
+	if (!this.blocked && this.messages.length) {
+		this.blocked=true;
+		let m=ttyS0.messages.shift();
+		ttyS0.exec('echo "'+m+'" > /dev/ttyS0',['-e'],function (error,stdout,stderr) {setTimeout(()=>{ttyS0.blocked=false},ttyS0.delay)});
+	}
+}
+//ttyS0_print("");
+ttyS0_print("================================\\nIP: "+require('os').networkInterfaces()['wlan0'][0]['address']+" (wlan0)\\nSOCKET-SERVER: "+config.socket_server_URL+"\\n================================");
+
 
 function ttyS0_print(msg) {
 	var mapUmlaute = {ä:"ae",ü:"ue",ö:"oe",Ä:"Ae",Ü:"Ue",Ö:"Oe",ß:"ss"};
@@ -28,6 +64,7 @@ function ttyS0_print(msg) {
 	//msg=unescape(msg).replace(/[^\w\s\däüöÄÜÖß\.,'!\@#$^&%*()\+=\-\[\]\/{}\|:\?]/g,'');
 	//msg=msg.replace(/\ {2,}/g," ");
 	msg=msg.replace(/"/g,'\'');
+	require('child_process').execSync('stty -F /dev/ttyS0 9600');
 	require('child_process').execSync('echo "'+msg+'" > /dev/ttyS0','e');
 }
 
