@@ -28,9 +28,8 @@ app.use('*', function(req, res) {res.sendStatus(404)});
 server.listen(config.socket_server_port||3000,()=>{console.log(new Date().toISOString()+' | SERVER STARTED, PORT: '+(config.socket_server_port||3000))});
 
 const own_client_socket = require('socket.io-client')(config.socket_server_URL);
-/*
+own_client_socket.emit('name','HTTP-request-bridge Socket-Client');
 own_client_socket.emit('info','Listening to https://[this_server]/m/[messagetext] and posting to '+default_room+'.');
-*/
 
 io.on('connection', (socket) => {
 	if (io.engine.clientsCount>50) {socket.disconnect();return}
@@ -133,7 +132,7 @@ function forward_message(socket,msg,meta) {
 			// send message
 			let ioto=io; 
 			meta.rooms.forEach((r)=>{ioto=ioto.to(r)});
-			ioto.emit('message',safe_text(msg),{sender:socket.id,name:safe_text(socket.data.name),rooms:meta.rooms.filter((e)=>{return e.startsWith('#')})});
+			ioto.emit('message',safe_text(msg),{sender:socket.id,name:safe_text(socket.data.name),rooms:meta.rooms.filter((e)=>{return (e&&e.startsWith('#'))})});
 		} else {
 			// send flood-protect-message to user (but prevent endless-loop in case he answers this)
 			if (socket.data.floodprotect.credit>-50) {
