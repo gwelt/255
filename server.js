@@ -17,6 +17,8 @@ app.use('(/255)?/m/:m', function(req, res) { //
 })
 */
 app.use(/^\/(255)?$/, function(req, res) {
+	//res.header("Access-Control-Allow-Origin", "*");
+	res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
 	if ((req.method=='POST')&&(req.body)) {
 		if (req.body.message) {
 			own_client_socket.emit('message',req.body.message,{rooms:(Array.isArray(req.body.rooms)?req.body.rooms:[default_room])});
@@ -29,7 +31,7 @@ server.listen(config.socket_server_port||3000,()=>{console.log(new Date().toISOS
 
 const own_client_socket = require('socket.io-client')(config.socket_server_URL);
 //own_client_socket.emit('name','HTTP-request-bridge Socket-Client');
-own_client_socket.emit('info','Listening to https://[this_server]/m/[messagetext] and posting to '+default_room+'.');
+own_client_socket.emit('info','Usage: HTTPS-POST-request with body:{"message":"Hello World!","rooms":["#room1","#room2"]}');
 
 io.on('connection', (socket) => {
 	if (io.engine.clientsCount>50) {socket.disconnect();return}

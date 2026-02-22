@@ -1,0 +1,176 @@
+<!doctype html>
+<html>
+<head>
+<title>LED</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<script src='led.js'></script>
+<script type="text/javascript">
+function call255(body,callback) {
+	let xhr=new XMLHttpRequest();
+	xhr.onreadystatechange=function() { if (xhr.readyState==4) {callback(xhr.status,xhr.responseText)} }
+	xhr.open('POST','https://00000101.de/255',true);
+	xhr.setRequestHeader('Content-type','application/JSON');
+	xhr.send(JSON.stringify(body));
+}
+function color(msg) { document.getElementById('colorpicker').value=msg; document.getElementById('led_color').value=msg; led(msg); }
+function led(msg) { call255({ message: msg, rooms: ['#led']},(s,r)=>{}); } //console.log(s,r)
+function box(msg) { call255({ message: msg, rooms: ['#box']},(s,r)=>{}); } //console.log(s,r)
+function twitter(msg) { call255({ message: msg, rooms: ['#twitter']},(s,r)=>{}); } //console.log(s,r)
+function hangfire(msg) { call255({ message: msg, rooms: ['#hangfire']},(s,r)=>{}); } //console.log(s,r)
+function send_sms(to,text) { if (confirm('Send SMS to '+to+' ?'+'\nText: '+text) == true) {hangfire('sms '+to+' '+text); alert('Die Nachricht wurde gesendet.')} else {} }
+function send_email(to,text) { if (confirm('Send E-Mail to '+to+' ?'+'\nText: '+text) == true) {hangfire('email '+to+' '+text); alert('Die Nachricht wurde gesendet.')} else {} }
+
+/* ================================================================= */
+/* === SOCKET ====================================================== */
+/* ================================================================= */
+setTimeout(function(){SocketIO()},250);
+var socket=false;
+var socket_id=undefined;
+function loadScript(src, done) {var js = document.createElement('script'); js.src = src; js.onload = function() {done(src+' executed')}; document.head.appendChild(js);}
+function SocketIO() {if (!socket) {loadScript('https://00000101.de/socket.io/socket.io.js', function() {
+socket=io('https://00000101.de');
+socket.on('connect', function () {
+	socket_id=socket.id;
+	socket.emit('join',['#led','#twitter','#printer','#broadcast']);
+	socket.emit('name','HTML-LED-twin');
+	console.log('CONNECTED');
+	ledBar.show_info();
+	ledBar.show_info_animation('#00ff00',5);
+});
+socket.on('disconnect', function (msg) {
+	console.log('CONNECTION CLOSED');
+	ledBar.show_info('#ff0000');
+	ledBar.show_info_animation('#ff0000',30);
+});
+ledBar.socket_on_message(socket); //ledBar.socket_on_message(socket,(t,m,r)=>{socket.emit(t,m,r)});
+})}};
+
+</script>
+<style>
+	* {box-sizing: border-box;}
+	html, body, section, div, input, textarea, select, button {border:0; outline: 0 none; border-radius: 0.4rem;font-family: Verdana, Geneva, sans-serif; font-size: 1.4rem; width:100%; overflow-wrap:break-word;}
+	body {border:0; outline: 0 none; padding:0%; margin:0; background-color:#fbfbfb; color: #000000;}
+
+	.bigscreen {padding:0.75rem; padding-top: 0;margin:0;}
+	.screen {min-width:300px; max-width:420px; margin:auto;}
+	.bar {display:flex; margin:0.25rem 0 0rem 0; justify-content: space-between}
+	.main {text-align:center;}
+	@media only screen and (max-width: 320px) {
+	    .bigscreen {padding:0rem 0.6rem 1rem 0.6rem;}
+	    .screen {min-width:260px;}
+	    html, body, section, div, input, textarea, select, button {font-size: 1rem}
+	}
+	@media only screen and (min-width: 768px) {
+	    .screen {min-width:640px; max-width:640px; margin:auto;}
+	    html, body, section, div, input, textarea, select, button {font-size: 1.6rem}
+	}
+
+	input {font-size:1.3rem; padding:0.2rem 0.4rem; margin:0.2rem 0 0.2rem 0; background-color:#F0F0F0; color:#000;}
+	textarea {font-size:0.8rem; padding:0.2rem 0.4rem; margin:0.8rem 0 0.5rem 0; background-color:#F0F0F0; color:#000;}
+
+	.btn {background-color:#0078D4;color:#FFF;
+		width: 32%;
+		cursor:pointer;
+		transition: 0.20s;
+		font-size: 0.7rem;
+		padding: 0.4rem 0.4rem;
+		margin: 0rem 0rem;
+	}
+
+	.btn2 {background-color:#0078D4;color:#FFF;
+		width: 15%;
+		cursor:pointer;
+		transition: 0.20s;
+		font-size: 0.7rem;
+		padding: 0.4rem 0.4rem;
+		margin: 0rem 0rem;
+	}
+
+	.input {background-color:#F0F0F0;color:#000;
+		width: 32%;
+		transition: 0.20s;
+		font-size: 0.7rem;
+		padding: 0.4rem 0.4rem;
+		margin: 0rem 0rem;
+		text-align: center;
+		/*margin: 0rem 0.25rem 0 0;*/
+	}
+
+	.colorpicker {
+		nobackground-color:#0078D4;
+		background-color:#fbfbfb;
+		width: 32%;
+		height: 1.25rem;
+		padding: 0.15rem;
+	}
+</style>
+</head>
+<body>
+	<div class=bigscreen>
+	<div class=screen>
+		<!--<video class="video" autoplay="autoplay" muted="muted" loop="loop"><source src="video.mp4" type="video/mp4"></video>-->
+		<br>
+		<div id='ledbar'></div>
+		<p>
+
+		<div class=bar>
+			<button class='btn' onclick="led('rainbow')">rainbow</button>
+			<button class='btn' onclick="led('sparkle')">sparkle</button>
+			<button class='btn' onclick="led('party')">party</button>
+		</div>
+
+		<div class=bar>
+			<button class='btn' onclick="led('#000000')">#000000</button>
+			<button class='btn' onclick="led('?')">random color</button>
+			<button class='btn' onclick="led('#102040')">#102040</button>
+		</div>
+
+		<div class=bar>
+			<input id='led_color' class='input' maxlength=16 onblur=color(this.value) value='#102040'>
+			<input id='colorpicker' type='color' value='#102040' class='colorpicker' onchange=color(this.value)>
+			<button class='btn' onclick="color(document.getElementById('led_color').value)">set</button>
+		</div>
+		
+		<div class=bar>
+			<button class='btn2' onclick="led('zoo')">zoo</button>
+			<button class='btn2' onclick="led('zoo 60')">zoo 60</button>
+			<button class='btn2' onclick="led('zoo 1')">zoo -1</button>
+			<button class='btn2' onclick="led('zoo 0')">zoo aus</button>
+			<button class='btn2' onclick="led('info #0000ff')">info</button>
+			<button class='btn2' onclick="led('info')">info aus</button>
+		</div>
+
+		<p>
+
+		<div class=bar>
+			<button class='btn' onclick="twitter('lt 1')">Tweet</button>
+			<button class='btn' onclick="box('sudoku')">Sudoku</button>
+			<button class='btn' onclick="box('shplst sven')">Einkaufsliste</button>
+		</div>
+
+		<div class=bar>
+			<button class='btn' onclick="box('liga bl1')">1. Bundesliga</button>
+			<button class='btn' onclick="box('liga bl2')">2. Bundesliga</button>
+			<button class='btn' onclick="hangfire('solar')">Solar</button>
+		</div>
+
+		<p>
+
+		<div class=bar>
+			<input id='sms_to' class='input' maxlength=20 value='+49123456789'>
+			<input id='sms_text' class='input' maxlength=120 value='Nachricht von 255.'>
+			<button class='btn' onclick="send_sms(document.getElementById('sms_to').value,document.getElementById('sms_text').value)">send SMS</button>
+		</div>
+
+		<div class=bar>
+			<input id='email_to' class='input' maxlength=64 value='info@yourdomain.de'>
+			<input id='email_text' class='input' maxlength=1024 value='Hello_World! This is a message for you.'>
+			<button class='btn' onclick="send_email(document.getElementById('email_to').value,document.getElementById('email_text').value)">send E-Mail</button>
+		</div>
+
+	</div>
+	</div>
+</body>
+</html>
+

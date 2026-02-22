@@ -1,3 +1,7 @@
+var ws281x = require('./node_modules/rpi-ws281x-native/lib/ws281x-native');
+const LEDbar = require('//var/www/html/led.js'); // require('./led.js');
+var ledBar = new LEDbar(ws281x);
+
 var config = require('./config.json');
 const socket = require('socket.io-client')(config.socket_server_URL,{rejectUnauthorized:false});
 
@@ -5,60 +9,14 @@ socket.on('connect', function() {
   console.log(new Date().toISOString()+' | '+socket.id)
   socket.emit('name','led');
   socket.emit('join',['#led'].concat(Array.isArray(config.led_rooms)?config.led_rooms:[]));
-  socket.emit('info','LED showing the requested colour. Example: /m #led #ff00ff');
+  socket.emit('info','LED magic. Usage: #led [#color]|? (e.g. #led #00ff00) | fade ([#color]) | rainbow ([steps]) ([delay_ms]) | sparkle ([seconds]) ([sparks_per_second]) ([spark_avg_duration_ms]) | party ([seconds]) | info ([#color]) | defaultaction [name]');
+  ledBar.show_info();
+  ledBar.show_info_animation('#00ff00',5);
 });
 
-socket.on('message', function(msg,meta) {
-  let c=(/^#([0-9a-f]{6})$/i.exec(msg)); if (c) {
-    current_color=c[1];
-    socket.emit('message','Ok. Colour is #'+current_color+' now.',{rooms:[(meta?meta.sender:undefined)]});
-  } else {
-    if (meta&&meta.rooms&&meta.rooms.includes('#led')) {
-      current_color=randCol();
-      socket.emit('message','Ok. How do you like #'+current_color+'?',{rooms:[(meta?meta.sender:undefined)]});
-    };
-  }
-  blinkLED();
+socket.on("disconnect", (reason) => {
+  ledBar.show_info('#ff0000');
+  ledBar.show_info_animation('#ff0000',30);
 });
 
-var Gpio = require('onoff').Gpio;
-var LED = new Gpio(17, 'out');
-var ws281x = require('./node_modules/rpi-ws281x-native/lib/ws281x-native');
-var NUM_LEDS = parseInt(process.argv[2], 10) || config.NUM_LEDS || 16,
-    pixelData = new Uint32Array(NUM_LEDS);
-ws281x.init(NUM_LEDS);
-process.on('SIGINT', function () {ws281x.reset(); process.nextTick(function () { process.exit(0); });});
-
-var current_color='102040';
-set_color(current_color,NUM_LEDS);
-
-function rgb2Int(r, g, b) {return ((r & 0xff) << 16) + ((g & 0xff) << 8) + (b & 0xff)}
-function hex2Int(hex) {var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex); return result ? rgb2Int(parseInt(result[1],16),parseInt(result[2],16),parseInt(result[3],16)) : null;}
-function randCol() {var c='0123456789ABCDEF'; var r=''; for (var i=0;i<6;i++) {r+=c[Math.floor(Math.random()*16)];} return r;}
-
-function set_color(colorcode,length) {
-  for(var i = 1; i <= NUM_LEDS; i++) {
-    pixelData[NUM_LEDS-i] = pixelData[NUM_LEDS-i-length] || hex2Int(colorcode);
-  }
-  ws281x.render(pixelData);
-}
-
-var animation;
-function push_color_array(color_array,delay) {
-  clearInterval(animation);
-  var counter=0;
-  animation = setInterval(function(){
-    if (counter<color_array.length+NUM_LEDS) {
-      set_color(color_array[counter]||current_color,1);
-    } else {
-      clearInterval(animation);
-    }
-    counter++;
-  },delay);
-}
-
-function blinkLED() {
-    push_color_array(['303030',,'808080',,'303030'],50);
-    LED.writeSync(1);
-    setTimeout(()=>{LED.writeSync(0)}, 320);
-}
+ledBar.socket_on_message(socket,(t,m,r)=>{socket.emit(t,m,r)}); // included in led.js
